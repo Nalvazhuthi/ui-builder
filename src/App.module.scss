@@ -1,0 +1,92 @@
+@use './styles/variables' as *;
+@use './styles/mixins' as *;
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $color-bg;
+  color: $color-text;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.canvasArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.rightPanel {
+  width: 300px;
+  background-color: $color-surface;
+  border-left: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.rightTabs {
+  display: flex;
+  border-bottom: 1px solid $color-border;
+}
+
+.rightTab {
+  flex: 1;
+  padding: 10px 4px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  color: $color-dark;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all $transition-base;
+  
+  &:hover:not(.rightTabActive) {
+    color: $color-muted;
+  }
+}
+
+.rightTabActive {
+  color: $color-primary;
+  border-bottom-color: $color-primary;
+}
+
+.rightContent {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ghost {
+  position: fixed;
+  pointer-events: none;
+  background-color: $color-primary;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(124, 92, 252, 0.4);
+  z-index: 100000;
+  transform: translate(-50%, -120%);
+  text-transform: capitalize;
+}

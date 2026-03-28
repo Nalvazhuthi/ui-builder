@@ -1,0 +1,92 @@
+.container {
+  display: flex;
+  align-items: center;
+  background: #11111a;
+  border: 1px solid #2a2a35;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 28px;
+  transition: border-color 0.2s;
+
+  &:focus-within {
+    border-color: #7c5cfc;
+  }
+}
+
+.inputWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: ew-resize;
+
+  &.dragging {
+    background: rgba(124, 92, 252, 0.1);
+  }
+
+  &.disabledInput {
+    cursor: not-allowed;
+    input {
+      color: #666;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.input {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  padding: 0 8px;
+  height: 100%;
+  outline: none;
+  cursor: text;
+
+  // Disable number arrows
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+.clear {
+  position: absolute;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: #555;
+  cursor: pointer;
+  border-radius: 2px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+}
+
+.unitSelect {
+  background: #1a1a25;
+  border: none;
+  border-left: 1px solid #2a2a35;
+  color: #777;
+  font-size: 9px;
+  padding: 0 4px;
+  height: 100%;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  width: 32px;
+  text-align: center;
+
+  &:hover {
+    color: #aaa;
+    background: #20202d;
+  }
+}

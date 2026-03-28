@@ -1,0 +1,238 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.inspector {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 11px;
+  background-color: #0b0b14;
+  border-left: 1px solid rgba(124, 92, 252, 0.1);
+}
+
+.empty {
+  flex: 1;
+  @include flex-col;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: $color-dark;
+  padding: 32px;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.15;
+  color: #7c5cfc;
+}
+
+.emptyText {
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.header {
+  padding: 16px;
+  border-bottom: 1px solid #1a1a25;
+  flex-shrink: 0;
+  background-color: #0d0d18;
+}
+
+.nodeInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  color: #7c5cfc;
+  background: rgba(124, 92, 252, 0.1);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.nameInput {
+  flex: 1;
+  background-color: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+  padding: 4px;
+  border-radius: 4px;
+  
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.typeBadge {
+  font-size: 10px;
+  color: #666;
+  background-color: #1a1a25;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.panelTabs {
+  display: flex;
+  background-color: #11111a;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 6px;
+  border: none;
+  background-color: transparent;
+  color: #777;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover:not(.tabActive) {
+    color: #aaa;
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.tabActive {
+  background-color: #1a1a25;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.scrollContent {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.contentEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contentTextArea {
+  width: 100%;
+  background-color: #04040d;
+  border: 1px solid #1a1a25;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  padding: 8px 12px;
+  resize: vertical;
+  min-height: 50px;
+  font-family: inherit;
+  box-sizing: border-box;
+  line-height: 1.5;
+  transition: all 0.2s;
+  
+  &:focus {
+    border-color: rgba(124, 92, 252, 0.4);
+    background-color: #080815;
+  }
+}
+
+.contentFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #555;
+  padding: 0 4px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.flexConfig, .gridConfig {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rangeContainer {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.range {
+  flex: 1;
+  accent-color: $color-primary;
+  cursor: pointer;
+}
+
+.rangeVal {
+  width: 26px;
+  text-align: right;
+  color: $color-muted;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.resetContainer {
+  padding: 12px 12px 16px;
+  border-top: 1px solid $color-border;
+}
+
+.resetBtn {
+  width: 100% !important;
+  font-size: 11px !important;
+}
+
+.boxLabel {
+  font-size: 9px;
+  color: $color-dark;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sideLabel {
+  font-size: 8.5px;
+  color: $color-dark;
+  text-align: center;
+  margin-bottom: 2px;
+}

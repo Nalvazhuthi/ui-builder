@@ -1,0 +1,47 @@
+@use '../../../styles/mixins' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 10px;
+  color: #777;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.group {
+  display: flex;
+  background-color: #11111a;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.button {
+  flex: 1;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  color: #666;
+  font-size: 14px; // Larger for icons
+  cursor: pointer;
+  font-family: inherit;
+  @include flex-center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover:not(.active) {
+    color: #999;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &.active {
+    background-color: #1a1a25;
+    color: #7c5cfc;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}

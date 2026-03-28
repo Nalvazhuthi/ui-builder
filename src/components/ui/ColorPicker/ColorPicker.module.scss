@@ -1,0 +1,27 @@
+@use '../../../styles/variables' as *;
+
+.container {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+
+.swatch {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid $color-border;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.picker {
+  position: absolute;
+  inset: -4px;
+  opacity: 0;
+  cursor: pointer;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+}

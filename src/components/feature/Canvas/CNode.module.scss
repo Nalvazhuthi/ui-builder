@@ -1,0 +1,112 @@
+@use '../../../styles/variables' as *;
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-dark;
+  font-size: 26px;
+  background-color: #1a1a30;
+  border-radius: inherit;
+}
+
+.inputPreview {
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.editable {
+  outline: none;
+  display: block;
+  min-width: 4px;
+}
+
+.insertLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: $color-primary;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba($color-primary, 0.25);
+  
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: $color-primary;
+  }
+  
+  &::before { left: -3px; }
+  &::after { right: -3px; }
+  
+  &.before { top: -1px; }
+  &.after { bottom: -1px; }
+}
+
+.selBadge {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  z-index: 50;
+  background-color: $color-primary;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px 4px 0 0;
+  white-space: nowrap;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hovBadge {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  z-index: 49;
+  background-color: $color-surface-hover;
+  color: $color-muted;
+  font-size: 8.5px;
+  padding: 1px 6px;
+  border-radius: 3px 3px 0 0;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid $color-border;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dropInside {
+  position: absolute;
+  inset: 0;
+  background-color: rgba($color-primary, 0.05);
+  border-radius: inherit;
+  z-index: 40;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropText {
+  font-size: 11px;
+  color: $color-primary;
+  font-weight: 700;
+  background-color: rgba($color-surface, 0.93);
+  padding: 4px 10px;
+  border-radius: 20px;
+}

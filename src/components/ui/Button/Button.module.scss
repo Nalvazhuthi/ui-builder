@@ -1,0 +1,90 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-md;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-base;
+  border: 1px solid transparent;
+  font-family: inherit;
+  gap: $spacing-sm;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.primary {
+  background-color: $color-primary;
+  color: #fff;
+  border-color: $color-primary;
+  &:hover:not(:disabled) {
+    background-color: $color-secondary;
+  }
+}
+
+.secondary {
+  background-color: $color-surface;
+  color: $color-text;
+  border-color: $color-border;
+  &:hover:not(:disabled) {
+    background-color: $color-surface-hover;
+  }
+}
+
+.ghost {
+  background-color: transparent;
+  color: $color-text;
+  &:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.danger {
+  background-color: transparent;
+  border-color: #3a1a1a;
+  color: #cc5555;
+  &:hover:not(:disabled) {
+    background-color: #3a1a1a;
+  }
+}
+
+.pill {
+  font-size: 10px;
+  color: $color-dark;
+  padding: 1px 3px;
+  opacity: 0.6;
+  background: none;
+  border: none;
+  min-width: unset;
+  height: unset;
+  &:hover:not(:disabled) {
+    opacity: 1;
+    color: $color-primary;
+  }
+}
+
+.tb {
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  color: $color-muted;
+  font-size: 13px;
+  &:hover:not(:disabled) {
+    border-color: #2a2a44;
+  }
+  &:disabled {
+    color: $color-dark;
+  }
+}
+
+.sm { padding: 4px 8px; font-size: $font-size-xs; }
+.md { padding: 8px 16px; font-size: $font-size-sm; }
+.lg { padding: 12px 24px; font-size: $font-size-base; }

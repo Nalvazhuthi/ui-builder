@@ -1,0 +1,11 @@
+@use '../../../styles/variables' as *;
+
+.field {
+  margin-bottom: 8px;
+}
+
+.label {
+  font-size: 9.5px;
+  color: $color-dark;
+  margin-bottom: 3px;
+}

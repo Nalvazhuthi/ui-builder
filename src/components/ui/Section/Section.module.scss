@@ -1,0 +1,40 @@
+@use '../../../styles/variables' as *;
+
+.section {
+  border-bottom: 1px solid $color-border;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.label {
+  font-size: 9.5px;
+  fontWeight: 600;
+  color: $color-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.arrow {
+  font-size: 8px;
+  color: $color-dark;
+  transition: transform 0.15s;
+  
+  &.open {
+    transform: rotate(0deg);
+  }
+  
+  &:not(.open) {
+    transform: rotate(-90deg);
+  }
+}
+
+.content {
+  padding: 0 10px 12px;
+}

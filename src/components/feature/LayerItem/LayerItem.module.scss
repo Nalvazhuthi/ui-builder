@@ -1,0 +1,175 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.row {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding-right: 12px;
+  cursor: pointer;
+  user-select: none;
+  color: $color-muted;
+  border-radius: 4px;
+  margin: 2px 8px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border: 1px solid transparent;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: $color-text;
+    
+    .actions {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+.indentGuide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(124, 92, 252, 0.15);
+  pointer-events: none;
+}
+
+.active {
+  background-color: rgba($color-primary, 0.12) !important;
+  color: $color-text;
+  border: 1px solid rgba($color-primary, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  .name {
+    font-weight: 600;
+  }
+}
+
+.dragOver {
+  background-color: rgba($color-primary, 0.2);
+  border: 1px dashed $color-primary;
+}
+
+.dropLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: $color-primary;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.dropBefore {
+  top: -1px;
+}
+
+.dropAfter {
+  bottom: -1px;
+}
+
+.hidden {
+  opacity: 0.4;
+}
+
+.collapse {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  opacity: 0.4;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    opacity: 1;
+    color: $color-primary;
+  }
+  
+  &.isCollapsed {
+    transform: rotate(-90deg);
+  }
+  
+  &.noChildren {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name {
+  flex: 1;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+
+  &.isInstance {
+    color: #7c5cfc;
+  }
+}
+
+.renameInput {
+  flex: 1;
+  font-size: 12px;
+  background: #11111a;
+  border: 1px solid #7c5cfc;
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 4px;
+  outline: none;
+  font-family: inherit;
+  width: 100%;
+}
+
+
+.actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: all 0.2s ease;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 12px;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  transition: all 0.15s;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    color: $color-primary;
+  }
+
+  &.active {
+    opacity: 1;
+    color: $color-primary;
+  }
+}

@@ -1,0 +1,41 @@
+@use '../../../styles/variables' as *;
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.input {
+  background-color: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: 5px;
+  color: $color-text;
+  font-size: 11px;
+  padding: 4px 7px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  outline: none;
+  
+  &[type="number"] {
+    -moz-appearance: textfield;
+    &::-webkit-inner-spin-button {
+      opacity: 0.3;
+    }
+  }
+}
+
+.clear {
+  font-size: 9px;
+  color: $color-dark;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0 1px;
+  transition: color $transition-fast;
+  
+  &:hover {
+    color: #f87171;
+  }
+}

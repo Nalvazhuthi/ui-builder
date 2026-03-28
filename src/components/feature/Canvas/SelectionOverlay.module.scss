@@ -1,0 +1,98 @@
+.overlayContainer {
+  position: absolute;
+  pointer-events: none;
+  z-index: 200;
+  box-sizing: border-box;
+  will-change: left, top, width, height;
+}
+
+.boundingBox {
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid #7c5cfc;
+  outline: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 12px rgba(124, 92, 252, 0.4);
+}
+
+.handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 2px solid #7c5cfc;
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 201;
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &:hover {
+    transform: scale(1.4);
+    background: #7c5cfc;
+    border-color: white;
+    box-shadow: 0 0 10px rgba(124, 92, 252, 0.6);
+  }
+}
+
+.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
+.top-center { top: -6px; left: calc(50% - 5px); cursor: ns-resize; }
+.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
+.middle-left { top: calc(50% - 5px); left: -6px; cursor: ew-resize; }
+.middle-right { top: calc(50% - 5px); right: -6px; cursor: ew-resize; }
+.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.bottom-center { bottom: -6px; left: calc(50% - 5px); cursor: ns-resize; }
+.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+.infoBadge, .parentBadge {
+  position: absolute;
+  background: #7c5cfc;
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 202;
+}
+
+.infoBadge {
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.parentBadge {
+  top: -28px;
+  left: 0;
+  background: #11111a;
+  border: 1px solid rgba(124, 92, 252, 0.3);
+  color: #7c5cfc;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Spacing Visualizers */
+.paddingContainer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.padding {
+  position: absolute;
+  background: rgba(34, 197, 94, 0.15); // Green for padding
+  border: 1px dashed rgba(34, 197, 94, 0.3);
+}
+
+.margin {
+  position: absolute;
+  background: rgba(249, 115, 22, 0.15); // Orange for margin
+  border: 1px dashed rgba(249, 115, 22, 0.3);
+}
+
+.top { top: 0; left: 0; right: 0; }
+.right { top: 0; right: 0; bottom: 0; }
+.bottom { bottom: 0; left: 0; right: 0; }
+.left { top: 0; left: 0; bottom: 0; }

@@ -1,0 +1,20 @@
+@use '../../../styles/variables' as *;
+
+.select {
+  background-color: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: 5px;
+  color: $color-text;
+  font-size: 11px;
+  padding: 4px 7px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%23888899' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}

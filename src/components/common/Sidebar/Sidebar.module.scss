@@ -1,0 +1,148 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.sidebar {
+  width: 214px;
+  background-color: $color-surface;
+  border-right: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid $color-border;
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 9px 4px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: $color-dark;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all $transition-base;
+  
+  &:hover:not(.tabActive) {
+    color: $color-muted;
+  }
+}
+
+.tabActive {
+  color: $color-primary;
+  border-bottom-color: $color-primary;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 4px;
+}
+
+.categoryHeader {
+  padding: 7px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.categoryLabel {
+  font-size: 9.5px;
+  color: $color-dark;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.arrow {
+  font-size: 9px;
+  color: $color-dark;
+  transition: transform 0.12s;
+  
+  &:not(.arrowOpen) {
+    transform: rotate(-90deg);
+  }
+}
+
+.componentItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 13px 6px 20px;
+  cursor: grab;
+  border-radius: 0 6px 6px 0;
+  margin: 1px 6px 1px 0;
+  transition: all $transition-fast;
+  user-select: none;
+  
+  &:hover {
+    background-color: $color-surface-hover;
+    color: $color-text;
+  }
+}
+
+.componentIcon {
+  width: 15px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.componentLabel {
+  font-size: 11px;
+  color: $color-muted;
+}
+
+.layersList {
+  padding-top: 2px;
+}
+
+.emptyLayers {
+  padding: 20px 13px;
+  color: $color-dark;
+  font-size: 11px;
+  text-align: center;
+}
+
+.library {
+  display: flex;
+  flex-direction: column;
+}
+
+.addBtn {
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(124, 92, 252, 0.1);
+  color: #7c5cfc;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #7c5cfc;
+    color: white;
+  }
+}
+
+.componentItem:hover .addBtn {
+  opacity: 1;
+}
+

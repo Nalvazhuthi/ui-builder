@@ -1,0 +1,71 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  padding: 8px 11px;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tabs {
+  display: flex;
+  gap: 5px;
+}
+
+.tab {
+  padding: 3px 9px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: $color-dark;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-base;
+}
+
+.tabActive {
+  background-color: $color-surface-hover;
+  border-color: $color-border;
+  color: $color-text;
+}
+
+.copyBtn {
+  padding: 3px 9px;
+  background-color: $color-primary;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity $transition-fast;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.code {
+  flex: 1;
+  margin: 0;
+  padding: 12px;
+  font-size: 10.5px;
+  color: #a8c7fa;
+  background-color: #04040c;
+  overflow-y: auto;
+  line-height: 1.65;
+  font-family: $font-mono;
+  white-space: pre-wrap;
+  @include custom-scroll;
+}
