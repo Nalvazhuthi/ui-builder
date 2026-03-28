@@ -13,18 +13,17 @@
 
 @mixin custom-scroll {
   &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
   &::-webkit-scrollbar-track {
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: $color-border;
-    border-radius: 10px;
-    transition: background $transition-base;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
     &:hover {
-      background: $color-primary;
+      background: rgba(255, 255, 255, 0.2);
     }
   }
 }

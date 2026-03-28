@@ -8,19 +8,27 @@
 }
 
 .input {
-  background-color: $color-bg;
-  border: 1px solid $color-border;
-  border-radius: 5px;
-  color: $color-text;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: #fff;
   font-size: 11px;
-  padding: 4px 7px;
+  padding: 0 8px;
+  height: 26px;
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
   outline: none;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+  
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
   
   &[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
     &::-webkit-inner-spin-button {
       opacity: 0.3;
     }

@@ -14,34 +14,35 @@
 
 .group {
   display: flex;
-  background-color: #11111a;
-  border-radius: 8px;
-  padding: 3px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 2px;
   gap: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .button {
   flex: 1;
-  height: 28px;
+  height: 24px;
   border: none;
-  border-radius: 6px;
-  color: #666;
-  font-size: 14px; // Larger for icons
+  border-radius: 4px;
+  background-color: transparent;
+  color: #888;
+  font-size: 13px;
   cursor: pointer;
   font-family: inherit;
   @include flex-center;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:hover:not(.active) {
-    color: #999;
-    background: rgba(255, 255, 255, 0.03);
+    color: #ccc;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   &.active {
     background-color: #1a1a25;
     color: #7c5cfc;
     font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 }

@@ -7,6 +7,7 @@ import type { AppNode } from "./types";
 // Hooks & Utils
 import { useCanvas } from "./hooks/useCanvas";
 import { mkNode, ins, insBefore, insAfter, del, find, ids } from "./utils/treeUtils";
+import { META } from "./constants/metadata";
 
 // Components
 import Navbar from "./components/common/Navbar";
@@ -43,6 +44,7 @@ const App: React.FC = () => {
   const [leftTab, setLeftTab] = useState<"comps" | "layers" | "library">("comps");
   const [rightPanel, setRightPanel] = useState<"insp" | "code">("insp");
   const [preview, setPreview] = useState(false);
+  const [grid, setGrid] = useState(true);
   const [showExport, setShowExport] = useState(false);
   const [libExpanded, setLibExpanded] = useState<Record<string, boolean>>({
     "Structure": true, "Basic": true, "Forms": true
@@ -138,6 +140,7 @@ const App: React.FC = () => {
           breakpoint={canvas.breakpoint} setBreakpoint={canvas.setBreakpoint}
           zoom={canvas.zoom}
           preview={preview} setPreview={setPreview}
+          grid={grid} setGrid={setGrid}
           undo={canvas.undo} redo={canvas.redo}
           canUndo={canvas.historyIndex > 0} 
           canRedo={canvas.historyIndex < canvas.history.length - 1}
@@ -205,6 +208,7 @@ const App: React.FC = () => {
               onMove={onMove}
               onStyle={canvas.updateStyle}
               preview={preview}
+              grid={grid}
               cdId={cdId} setCdId={setCdId}
               zoom={canvas.zoom}
               setZoom={canvas.setZoom}
@@ -226,7 +230,8 @@ const App: React.FC = () => {
               className={styles.ghost}
               style={{ left: ghostPos.x, top: ghostPos.y }}
             >
-              {ghostType}
+              <span style={{ color: META[ghostType]?.color || '#fff' }}>{META[ghostType]?.icon || "❖"}</span>
+              <span>{META[ghostType]?.label || ghostType}</span>
             </div>
           )}
         </div>

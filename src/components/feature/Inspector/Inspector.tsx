@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styles from "./Inspector.module.scss";
 import type { AppNode, StyleProps } from "../../../types";
 import { META } from "../../../constants/metadata";
-import { exportComp, dlFiles, pNum } from "../../../utils/exportEngine";
+import { exportComp, dlFiles } from "../../../utils/exportEngine";
 import Button from "../../ui/Button/Button";
 import Section from "../../ui/Section/Section";
 import Field from "../../ui/Field/Field";
@@ -95,7 +95,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
         {panel === "design" ? (
           <>
             {/* Content Section */}
-            {node.content !== undefined && !["input", "image"].includes(node.type) && (
+            {["text", "heading", "button"].includes(node.type) && (
               <Section label="Content" open={true} onToggle={() => { }}>
                 <div className={styles.contentEditor}>
                   <textarea
@@ -175,7 +175,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                     label="Direction" 
                     val={(s.flexDirection as string) || "row"} 
                     ch={(v) => set("flexDirection", v)} 
-                    opts={[["row", "→"], ["column", "↓"], ["row-reverse", "←"], ["column-reverse", "↑"]]} 
+                    opts={[["row", "→", "Row"], ["column", "↓", "Column"], ["row-reverse", "←", "Row Reverse"], ["column-reverse", "↑", "Column Reverse"]]} 
                   />
                   <div className={styles.flexConfig}>
                     <TogGrp 
@@ -203,10 +203,9 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                     />
                     <div className={styles.grid2}>
                       <Field label="Gap">
-                        <Input 
-                          type="number" 
-                          value={pNum(s.gap)} 
-                          onChange={(e) => set("gap", +e.target.value > 0 ? `${e.target.value}px` : "")} 
+                        <PropertyInput 
+                          value={s.gap || "0px"} 
+                          onChange={(v) => set("gap", v)} 
                           onClear={() => clr("gap")}
                           showClear={!!s.gap}
                         />
@@ -236,10 +235,9 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                       <Input value={(s.gridTemplateRows as string) || ""} onChange={(e) => set("gridTemplateRows", e.target.value)} placeholder="auto" />
                     </Field>
                     <Field label="Gap">
-                      <Input 
-                        type="number" 
-                        value={pNum(s.gap)} 
-                        onChange={(e) => set("gap", +e.target.value > 0 ? `${e.target.value}px` : "")} 
+                      <PropertyInput 
+                        value={s.gap || "0px"} 
+                        onChange={(v) => set("gap", v)} 
                         onClear={() => clr("gap")}
                         showClear={!!s.gap}
                       />
@@ -252,10 +250,9 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                 <div className={styles.grid4}>
                   {[["T", "top"], ["R", "right"], ["B", "bottom"], ["L", "left"]].map(([l, k]) => (
                     <Field key={k} label={l}>
-                      <Input 
-                        type="number" 
-                        value={pNum(s[k])} 
-                        onChange={(e) => set(k, `${e.target.value}px`)} 
+                      <PropertyInput 
+                        value={s[k] || "0px"} 
+                        onChange={(v) => set(k, v)} 
                         onClear={() => clr(k)}
                         showClear={s[k] !== undefined}
                       />
@@ -340,10 +337,9 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
               </Field>
               <div className={styles.grid2}>
                 <Field label="Radius">
-                  <Input 
-                    type="number" 
-                    value={pNum(s.borderRadius)} 
-                    onChange={(e) => set("borderRadius", `${e.target.value}px`)} 
+                  <PropertyInput 
+                    value={s.borderRadius || "0px"} 
+                    onChange={(v) => set("borderRadius", v)} 
                     onClear={() => clr("borderRadius")}
                     showClear={s.borderRadius !== undefined}
                   />
@@ -366,18 +362,16 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
             <Section label="Stroke" open={open.stroke} onToggle={() => toggle("stroke")}>
               <div className={styles.grid2}>
                 <Field label="Width">
-                  <Input 
-                    type="number" 
-                    value={pNum(s.borderWidth || s.borderBottomWidth || s.borderTopWidth || s.borderLeftWidth || s.borderRightWidth)} 
-                    onChange={(e) => {
-                      const w = `${e.target.value}px`;
+                  <PropertyInput 
+                    value={s.borderWidth || s.borderBottomWidth || s.borderTopWidth || s.borderLeftWidth || s.borderRightWidth || "0px"} 
+                    onChange={(v) => {
                       const side = (s as any)._borderSide || "all";
                       sm({
-                        borderWidth: side === "all" ? w : "0px",
-                        borderTopWidth: side === "top" ? w : undefined,
-                        borderBottomWidth: side === "bottom" ? w : undefined,
-                        borderLeftWidth: side === "left" ? w : undefined,
-                        borderRightWidth: side === "right" ? w : undefined,
+                        borderWidth: side === "all" ? v : "0px",
+                        borderTopWidth: side === "top" ? v : undefined,
+                        borderBottomWidth: side === "bottom" ? v : undefined,
+                        borderLeftWidth: side === "left" ? v : undefined,
+                        borderRightWidth: side === "right" ? v : undefined,
                       });
                     }} 
                     onClear={() => sm({ borderWidth: undefined, borderTopWidth: undefined, borderBottomWidth: undefined, borderLeftWidth: undefined, borderRightWidth: undefined })}
@@ -456,15 +450,15 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
             </Section>
 
             {/* Typography Section */}
-            <Section label="Typography" open={open.typo} onToggle={() => toggle("typo")}>
+            {["text", "heading", "button", "input"].includes(node.type) && (
+              <Section label="Typography" open={open.typo} onToggle={() => toggle("typo")}>
               <div className={styles.grid2}>
                 <Field label="Size">
-                  <Input 
-                    type="number" 
-                    value={pNum(s.fontSize)} 
-                    onChange={(e) => set("fontSize", `${e.target.value}px`)} 
+                  <PropertyInput 
+                    value={s.fontSize || "auto"} 
+                    onChange={(v) => set("fontSize", v)} 
                     onClear={() => clr("fontSize")}
-                    showClear={s.fontSize !== undefined}
+                    showClear={!!s.fontSize}
                   />
                 </Field>
                 <Field label="Weight">
@@ -475,21 +469,20 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                   />
                 </Field>
                 <Field label="Line H">
-                  <Input 
-                    type="number" 
-                    value={pNum(s.lineHeight)} 
-                    onChange={(e) => set("lineHeight", `${e.target.value}`)} 
+                  <PropertyInput 
+                    value={s.lineHeight || "auto"} 
+                    units={["px", "%", "em", "rem", ""]}
+                    onChange={(v) => set("lineHeight", v)} 
                     onClear={() => clr("lineHeight")}
-                    showClear={s.lineHeight !== undefined}
+                    showClear={!!s.lineHeight}
                   />
                 </Field>
                 <Field label="Letter Spc">
-                  <Input 
-                    type="number" 
-                    value={pNum(s.letterSpacing)} 
-                    onChange={(e) => set("letterSpacing", `${e.target.value}px`)} 
+                  <PropertyInput 
+                    value={s.letterSpacing || "normal"} 
+                    onChange={(v) => set("letterSpacing", v)} 
                     onClear={() => clr("letterSpacing")}
-                    showClear={s.letterSpacing !== undefined}
+                    showClear={!!s.letterSpacing}
                   />
                 </Field>
               </div>
@@ -546,6 +539,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                   />
               </Field>
             </Section>
+            )}
 
             {/* Reset Button */}
             <div className={styles.resetContainer}>

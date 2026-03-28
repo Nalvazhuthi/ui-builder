@@ -12,10 +12,11 @@ interface SelectionOverlayProps {
   parentType?: string;
   padding?: { t: number, r: number, b: number, l: number };
   margin?: { t: number, r: number, b: number, l: number };
+  snap?: boolean;
 }
 
 const SelectionOverlay: React.FC<SelectionOverlayProps> = ({ 
-  selId, zoom, panX, panY, frameRef, onStyle, setIsResizing, parentType, padding, margin 
+  selId, zoom, panX, panY, frameRef, onStyle, setIsResizing, parentType, padding, margin, snap
 }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,17 +54,18 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       const dy = (e.clientY - startRef.current.y) / zoom;
       
       const newStyle: any = { flex: "none" };
+      const snapVal = (v: number) => snap ? Math.round(v / 8) * 8 : Math.round(v);
       
       // Right & Bottom
-      if (resizing.includes("right")) newStyle.width = Math.max(20, startRef.current.w + dx);
-      if (resizing.includes("bottom")) newStyle.height = Math.max(20, startRef.current.h + dy);
+      if (resizing.includes("right")) newStyle.width = `${Math.max(20, snapVal(startRef.current.w + dx))}px`;
+      if (resizing.includes("bottom")) newStyle.height = `${Math.max(20, snapVal(startRef.current.h + dy))}px`;
       
       // Top & Left (Positioning adjustment for absolutely positioned items)
       if (resizing.includes("top")) {
-        newStyle.height = Math.max(20, startRef.current.h - dy);
+        newStyle.height = `${Math.max(20, snapVal(startRef.current.h - dy))}px`;
       }
       if (resizing.includes("left")) {
-        newStyle.width = Math.max(20, startRef.current.w - dx);
+        newStyle.width = `${Math.max(20, snapVal(startRef.current.w - dx))}px`;
       }
       
       onStyle(selId, newStyle);

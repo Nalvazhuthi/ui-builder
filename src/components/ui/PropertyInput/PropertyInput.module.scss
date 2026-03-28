@@ -1,15 +1,16 @@
 .container {
   display: flex;
   align-items: center;
-  background: #11111a;
-  border: 1px solid #2a2a35;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   overflow: hidden;
-  height: 28px;
-  transition: border-color 0.2s;
+  height: 26px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus-within {
-    border-color: #7c5cfc;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -72,10 +73,10 @@
 }
 
 .unitSelect {
-  background: #1a1a25;
+  background: rgba(255, 255, 255, 0.03);
   border: none;
-  border-left: 1px solid #2a2a35;
-  color: #777;
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
+  color: #999;
   font-size: 9px;
   padding: 0 4px;
   height: 100%;
@@ -84,9 +85,10 @@
   appearance: none;
   width: 32px;
   text-align: center;
+  transition: background 0.2s;
 
   &:hover {
-    color: #aaa;
-    background: #20202d;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
   }
 }

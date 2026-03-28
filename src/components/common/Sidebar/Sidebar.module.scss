@@ -49,20 +49,32 @@
 }
 
 .categoryHeader {
-  padding: 7px 13px;
+  padding: 10px 13px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  background-color: rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.categoryIcon {
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 .categoryLabel {
-  font-size: 9.5px;
-  color: $color-dark;
+  font-size: 10.5px;
+  color: $color-text;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .arrow {

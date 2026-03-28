@@ -61,7 +61,7 @@
   top: -20px;
   left: 0;
   z-index: 50;
-  background-color: $color-primary;
+  background-color: #3b82f6; // Blue for selection
   color: #fff;
   font-size: 10px;
   font-weight: 600;
@@ -79,15 +79,15 @@
   top: -20px;
   left: 0;
   z-index: 49;
-  background-color: $color-surface-hover;
-  color: $color-muted;
+  background-color: #a78bfa; // Purple for hover
+  color: #fff;
   font-size: 8.5px;
   padding: 1px 6px;
   border-radius: 3px 3px 0 0;
   white-space: nowrap;
   pointer-events: none;
-  border: 1px solid $color-border;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  box-shadow: 0 -2px 10px rgba(167, 139, 250, 0.2);
 }
 
 .dropInside {

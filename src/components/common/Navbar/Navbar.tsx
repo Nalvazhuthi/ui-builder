@@ -11,6 +11,8 @@ interface NavbarProps {
   zoom: number;
   preview: boolean;
   setPreview: (p: boolean) => void;
+  grid: boolean;
+  setGrid: (g: boolean) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -22,6 +24,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({
   tab, setTab, breakpoint, setBreakpoint, zoom, preview, setPreview,
+  grid, setGrid,
   undo, redo, canUndo, canRedo, onSave, onClear, onExport
 }) => {
   return (
@@ -64,6 +67,16 @@ const Navbar: React.FC<NavbarProps> = ({
                     {ic}
                   </button>
                 ))}
+                
+                <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+                
+                <button
+                  onClick={() => setGrid(!grid)}
+                  title="Toggle Grid & Snapping"
+                  className={`${styles.bpButton} ${grid ? styles.active : ""}`}
+                >
+                  ⊞
+                </button>
               </div>
             </div>
             

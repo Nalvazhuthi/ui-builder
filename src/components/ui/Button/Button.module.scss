@@ -12,6 +12,11 @@
   border: 1px solid transparent;
   font-family: inherit;
   gap: $spacing-sm;
+  outline: none;
+  
+  &:focus-visible {
+    box-shadow: 0 0 0 2px rgba(124, 92, 252, 0.4);
+  }
   
   &:disabled {
     opacity: 0.5;

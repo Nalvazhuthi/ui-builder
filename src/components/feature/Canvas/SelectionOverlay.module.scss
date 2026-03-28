@@ -9,9 +9,9 @@
 .boundingBox {
   position: absolute;
   inset: -1px;
-  border: 1.5px solid #7c5cfc;
+  border: 1.5px solid #3b82f6;
   outline: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 12px rgba(124, 92, 252, 0.4);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
 .handle {
@@ -19,7 +19,7 @@
   width: 10px;
   height: 10px;
   background: white;
-  border: 2px solid #7c5cfc;
+  border: 2px solid #3b82f6;
   border-radius: 50%;
   pointer-events: auto;
   cursor: pointer;
@@ -28,9 +28,9 @@
 
   &:hover {
     transform: scale(1.4);
-    background: #7c5cfc;
+    background: #3b82f6;
     border-color: white;
-    box-shadow: 0 0 10px rgba(124, 92, 252, 0.6);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
   }
 }
 
@@ -45,7 +45,7 @@
 
 .infoBadge, .parentBadge {
   position: absolute;
-  background: #7c5cfc;
+  background: #3b82f6;
   color: white;
   font-size: 10px;
   padding: 2px 8px;
@@ -66,8 +66,8 @@
   top: -28px;
   left: 0;
   background: #11111a;
-  border: 1px solid rgba(124, 92, 252, 0.3);
-  color: #7c5cfc;
+  border: 1px solid rgba(234, 179, 8, 0.5); /* Yellow for parent */
+  color: #eab308;
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.5px;

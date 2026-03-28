@@ -4,6 +4,16 @@ import type { AppNode, ComponentMetadata } from "../../../types";
 import { LIB, META } from "../../../constants/metadata";
 import LayerItem from "../../feature/LayerItem/LayerItem";
 
+const CAT_ICONS: Record<string, string> = {
+  Structure: "📐",
+  Basic: "⚡",
+  Typography: "T",
+  Forms: "☑",
+  Interactive: "👆",
+  Advanced: "⚙",
+  "Tailwind UI": "🌊"
+};
+
 interface SidebarProps {
   leftTab: "comps" | "layers" | "library";
   setLeftTab: (tab: "comps" | "layers" | "library") => void;
@@ -58,7 +68,10 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => setLibExpanded({ ...libExpanded, [cat]: !libExpanded[cat] })} 
               className={styles.categoryHeader}
             >
-              <span className={styles.categoryLabel}>{cat}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span className={styles.categoryIcon}>{CAT_ICONS[cat] || "❖"}</span>
+                <span className={styles.categoryLabel}>{cat}</span>
+              </div>
               <span className={`${styles.arrow} ${libExpanded[cat] ? styles.arrowOpen : ""}`}>▼</span>
             </div>
             

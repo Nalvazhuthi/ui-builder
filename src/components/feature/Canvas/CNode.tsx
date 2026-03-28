@@ -81,9 +81,10 @@ const CNode: React.FC<CNodeProps> = ({
     boxSizing: "border-box" as const,
     minWidth: 24,
     minHeight: 24,
-    outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `1.5px dashed rgba(124, 92, 252, 0.6)` : isSel ? `1px solid transparent` : "1px solid transparent",
+    backgroundColor: node.style?.backgroundColor || (isContainer ? "rgba(255, 255, 255, 0.02)" : undefined),
+    outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `2px solid #a78bfa` : isSel ? `1px solid transparent` : (isContainer ? "1px dashed rgba(255, 255, 255, 0.1)" : "1px solid transparent"),
     outlineOffset: -1,
-    boxShadow: isHov ? `inset 0 0 0 9999px rgba(124, 92, 252, 0.05)` : node.style?.boxShadow,
+    boxShadow: isHov ? `inset 0 0 0 9999px rgba(167, 139, 250, 0.1)` : node.style?.boxShadow,
     opacity: drag ? 0.35 : 1,
     transition: "all 0.1s ease",
     cursor: preview ? "default" : node.locked ? "not-allowed" : "pointer"

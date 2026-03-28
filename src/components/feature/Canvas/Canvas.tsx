@@ -18,6 +18,7 @@ interface CanvasProps {
   onMove: (srcId: string, targetId: string, position: "before" | "inside" | "after") => void;
   onStyle: (id: string, style: any) => void;
   preview: boolean;
+  grid: boolean;
   cdId: string | null;
   setCdId: (id: string | null) => void;
   zoom: number;
@@ -35,7 +36,7 @@ interface CanvasProps {
 
 const Canvas: React.FC<CanvasProps> = ({
   tree, selId, hovId, setHovId, onSel, editId, setEditId, onContent, 
-  onDropInto, onMove, onStyle, preview, cdId, setCdId, zoom, setZoom, panX, panY, panning, 
+  onDropInto, onMove, onStyle, preview, grid, cdId, setCdId, zoom, setZoom, panX, panY, panning, 
   onMouseDown, onMouseMove, onMouseUp, breakpoint, isResizing, setIsResizing
 }) => {
   const canRef = useRef<HTMLDivElement>(null);
@@ -99,13 +100,15 @@ const Canvas: React.FC<CanvasProps> = ({
       onDrop={handleDrop}
     >
       {/* Grid Background */}
-      <div 
-        className={styles.grid} 
-        style={{ 
-          backgroundSize: `${24 * zoom}px ${24 * zoom}px`, 
-          backgroundPosition: `${panX}px ${panY}px` 
-        }} 
-      />
+      {grid && (
+        <div 
+          className={styles.grid} 
+          style={{ 
+            backgroundSize: `${24 * zoom}px ${24 * zoom}px`, 
+            backgroundPosition: `${panX}px ${panY}px` 
+          }} 
+        />
+      )}
 
       {/* Frame Container */}
       <div 
@@ -199,6 +202,7 @@ const Canvas: React.FC<CanvasProps> = ({
                     panY={panY} 
                     frameRef={contentRef} 
                     onStyle={onStyle}
+                    snap={grid}
                     setIsResizing={setIsResizing}
                     parentType={parentNode?.type}
                     padding={{
