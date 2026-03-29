@@ -1,14 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
-import styles from "./Select.module.scss";
+import styles from "./Dropdown.module.scss";
 
-interface SelectProps {
-  options: string[] | { value: string, label: string }[];
-  value?: string | number;
-  onChange?: (e: any) => void;
-  className?: string;
+interface Option {
+  label: string;
+  value: string;
 }
 
-const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "" }) => {
+interface DropdownProps {
+  options: (string | Option)[];
+  value: string;
+  onChange: (val: string) => void;
+  className?: string;
+  icon?: React.ReactNode;
+}
+
+const Dropdown: React.FC<DropdownProps> = ({ options, value, onChange, className, icon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,27 +53,23 @@ const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "
     setIsOpen(!isOpen);
   };
 
-  const handleSelect = (val: string) => {
-    if (onChange) {
-      onChange({ target: { value: val } });
-    }
-    setIsOpen(false);
-  };
-
   return (
-    <div className={`${styles.dropdown} ${className}`} ref={containerRef}>
+    <div className={`${styles.dropdown} ${className || ""}`} ref={containerRef}>
       <button 
-        className={`${styles.trigger} ${isOpen ? styles.triggerActive : ""}`}
+        className={`${styles.trigger} ${isOpen ? styles.active : ""}`}
         onClick={toggle}
         type="button"
       >
-        <span className={styles.label}>{selected?.label || value}</span>
+        <div className={styles.labelArea}>
+          {icon && <span className={styles.icon}>{icon}</span>}
+          <span className={styles.label}>{selected?.label || value}</span>
+        </div>
         <span className={styles.chevron}>▾</span>
       </button>
 
       {isOpen && (
         <div 
-          className={`${styles.menu} custom-scroll`}
+          className={styles.menu} 
           style={{ 
             position: 'fixed', 
             top: coords.top + 4, 
@@ -80,7 +82,10 @@ const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "
             <div 
               key={opt.value}
               className={`${styles.option} ${String(opt.value) === String(value) ? styles.optActive : ""}`}
-              onClick={() => handleSelect(opt.value)}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
             >
               {opt.label}
             </div>
@@ -91,5 +96,4 @@ const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "
   );
 };
 
-export default Select;
-
+export default Dropdown;

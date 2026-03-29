@@ -83,6 +83,10 @@ const CNode: React.FC<CNodeProps> = ({
     else if (cdId && cdId !== node.id) onMove(cdId, node.id, pos);
   };
 
+  const h = node.style?.height as string || "";
+  const mh = node.style?.minHeight as string || "";
+  const isPreciseHeight = /vh|%|calc|px|rem|em/.test(h) || /vh|%|calc|px|rem|em/.test(mh);
+
   const baseStyle: any = {
     position: "relative",
     boxSizing: "border-box",
@@ -91,6 +95,7 @@ const CNode: React.FC<CNodeProps> = ({
     transition: "all 0.1s ease",
     cursor: preview ? "default" : node.locked ? "not-allowed" : "pointer",
     ...node.style,
+    flexShrink: node.style?.flexShrink ?? (isPreciseHeight ? 0 : 1),
     whiteSpace: "pre-wrap",
     backgroundColor: node.style?.backgroundColor,
     outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `2px solid #a78bfa` : isSel ? `1px solid transparent` : (isContainer ? "1px dashed transparent" : "1px solid transparent"),

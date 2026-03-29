@@ -58,6 +58,8 @@ export const insAfter = (t: AppNode, siblingId: string, newNode: AppNode): AppNo
 
 export const ids = (n: AppNode): string[] => [n.id, ...(n.children || []).flatMap(ids)];
 
+export const getAllNodes = (n: AppNode): AppNode[] => [n, ...(n.children || []).flatMap(getAllNodes)];
+
 export const getParentId = (t: AppNode, cid: string): string | null => {
   if ((t.children || []).some(c => c.id === cid)) return t.id;
   for (const c of t.children || []) {

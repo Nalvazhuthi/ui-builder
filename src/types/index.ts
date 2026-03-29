@@ -15,6 +15,43 @@ export interface AppNode {
   isMaster?: boolean;
   masterId?: string;
   masters?: Record<string, AppNode>;
+  logic?: Record<string, LogicFlow>; // eventType -> LogicFlow
+  variables?: LogicVariable[]; // local variables
+}
+
+export interface LogicVariable {
+  id: string;
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'any';
+  defaultValue: any;
+}
+
+export interface LogicRegistry {
+  globals: LogicVariable[];
+  functions: Record<string, LogicFlow>;
+}
+
+export interface LogicFlow {
+  id: string;
+  nodes: LogicNode[];
+  edges: LogicEdge[];
+}
+
+export interface LogicNode {
+  id: string;
+  type?: string;
+  data: any;
+  position: { x: number; y: number };
+  [key: string]: any;
+}
+
+export interface LogicEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+  [key: string]: any;
 }
 
 export interface ComponentMetadata {

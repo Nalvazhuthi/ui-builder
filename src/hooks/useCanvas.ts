@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { AppNode, Breakpoint } from "../types";
-import { find, upd, del, ins, dup, getParentId, uid, mkNode, groupNodesInTree } from "../utils/treeUtils";
+import { find, upd, del, ins, dup, getParentId, uid, mkNode, groupNodesInTree, insBefore, insAfter, ids } from "../utils/treeUtils";
 
 export const useCanvas = (initialTree: AppNode) => {
   const [tree, setTree] = useState<AppNode>(() => {
@@ -88,6 +88,12 @@ export const useCanvas = (initialTree: AppNode) => {
   const toggleLock = (id: string) => push(upd(tree, id, n => ({ ...n, locked: !n.locked })));
   const renameNode = (id: string, name: string) => push(upd(tree, id, n => ({ ...n, name })));
   const resetStyles = (id: string, defaultStyle: any) => push(upd(tree, id, n => ({ ...n, style: { ...defaultStyle } })));
+  
+  const updateLogic = (id: string, eventType: string, flow: any) => 
+    push(upd(tree, id, n => ({ ...n, logic: { ...(n.logic || {}), [eventType]: flow } })));
+
+  const updateVariables = (id: string, variables: any[]) => 
+    push(upd(tree, id, n => ({ ...n, variables })));
 
   const groupNodes = () => {
     if (selIds.length < 1) return;
@@ -147,6 +153,34 @@ export const useCanvas = (initialTree: AppNode) => {
     isResizing, setIsResizing,
     breakpoint, setBreakpoint,
     updateStyle, updateContent, deleteNode, duplicateNode, toggleHide, toggleLock, renameNode, resetStyles,
-    groupNodes, createComponent, useComponent
+    updateLogic, updateVariables,
+    groupNodes, createComponent, useComponent,
+    onDropInto: (compType: string, targetId: string, position: "before" | "inside" | "after") => {
+      const newNode = mkNode(compType);
+      if (position === "inside") {
+        push(ins(tree, targetId, newNode));
+      } else if (position === "before") {
+        push(insBefore(tree, targetId, newNode));
+      } else {
+        push(insAfter(tree, targetId, newNode));
+      }
+      select(newNode.id);
+    },
+    onMove: (srcId: string, targetId: string, position: "before" | "inside" | "after") => {
+      if (srcId === targetId) return;
+      const srcNode = find(tree, srcId);
+      if (!srcNode) return;
+      if (ids(srcNode).includes(targetId)) return;
+      
+      let next = del(tree, srcId);
+      if (position === "inside") {
+        next = ins(next, targetId, srcNode);
+      } else if (position === "before") {
+        next = insBefore(next, targetId, srcNode);
+      } else {
+        next = insAfter(next, targetId, srcNode);
+      }
+      push(next);
+    }
   };
 };

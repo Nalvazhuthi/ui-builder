@@ -11,7 +11,8 @@ import Select from "../../ui/Select/Select";
 import ColorPicker from "../../ui/ColorPicker/ColorPicker";
 import TogGrp from "../../ui/TogGrp/TogGrp";
 import PropertyInput from "../../ui/PropertyInput/PropertyInput";
-import AdvancedPanel from "./AdvancedPanel.tsx";
+import AdvancedPanel from "./AdvancedPanel";
+import LogicInspector from "./LogicInspector";
 
 import { find } from "../../../utils/treeUtils";
 
@@ -22,10 +23,13 @@ interface InspectorProps {
   onContent: (id: string, content: string) => void;
   onRename: (id: string, name: string) => void;
   onReset: (id: string) => void;
+  onUpdateLogic: (id: string, eventType: string, logic: any) => void;
 }
 
-const Inspector: React.FC<InspectorProps> = ({ selIds, tree, onStyle, onContent, onRename, onReset }) => {
-  const [panel, setPanel] = useState<"design" | "adv">("design");
+const Inspector: React.FC<InspectorProps> = ({ 
+  selIds, tree, onStyle, onContent, onRename, onReset, onUpdateLogic 
+}) => {
+  const [panel, setPanel] = useState<"design" | "adv" | "logic">("design");
   const [open, setOpen] = useState({
     layout: true, size: true, spacing: true, fill: true, stroke: false, typo: false, effects: false
   });
@@ -94,10 +98,10 @@ const Inspector: React.FC<InspectorProps> = ({ selIds, tree, onStyle, onContent,
         </div>
         
         <div className={styles.panelTabs}>
-          {[["design", "Design"], ["adv", "Variables"]].map(([p, l]) => (
+          {[["design", "Design"], ["logic", "Logic ⚡"], ["adv", "Variables"]].map(([p, l]) => (
             <button
               key={p}
-              onClick={() => setPanel(p as "design" | "adv")}
+              onClick={() => setPanel(p as "design" | "adv" | "logic")}
               className={`${styles.tab} ${panel === p ? styles.tabActive : ""}`}
             >
               {l}
@@ -666,6 +670,11 @@ const Inspector: React.FC<InspectorProps> = ({ selIds, tree, onStyle, onContent,
               </Button>
             </div>
           </>
+        ) : panel === "logic" ? (
+          <LogicInspector 
+            node={node} 
+            onUpdateLogic={(eventType: string, logic: any) => onUpdateLogic(node.id, eventType, logic)} 
+          />
         ) : (
           <AdvancedPanel node={node} onStyle={onStyle} />
         )}

@@ -39,7 +39,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     };
 
     updateRect();
-    const interval = setInterval(updateRect, 30); // Faster polling during resizing
+    const interval = setInterval(updateRect, 30);
     return () => clearInterval(interval);
   }, [selId, zoom, panX, panY]);
 
@@ -56,11 +56,9 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       const newStyle: any = { flex: "none" };
       const snapVal = (v: number) => snap ? Math.round(v / 8) * 8 : Math.round(v);
       
-      // Right & Bottom
       if (resizing.includes("right")) newStyle.width = `${Math.max(20, snapVal(startRef.current.w + dx))}px`;
       if (resizing.includes("bottom")) newStyle.height = `${Math.max(20, snapVal(startRef.current.h + dy))}px`;
       
-      // Top & Left (Positioning adjustment for absolutely positioned items)
       if (resizing.includes("top")) {
         newStyle.height = `${Math.max(20, snapVal(startRef.current.h - dy))}px`;
       }
@@ -74,7 +72,6 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     const onUp = () => {
       setResizing(null);
       startRef.current = null;
-      // Delay resetting isResizing state to allow trailing click events to be ignored
       setTimeout(() => setIsResizing(false), 50);
     };
 
@@ -96,7 +93,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     startRef.current = {
       x: e.clientX,
       y: e.clientY,
-      w: r.width / zoom, // Store in design units
+      w: r.width / zoom,
       h: r.height / zoom
     };
     setIsResizing(true);
@@ -107,8 +104,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
 
   const frameRect = frameRef.current.getBoundingClientRect();
 
-  // Position relative to the frame, dividing screen pixels by zoom to get CSS values
-  const style = {
+  const posStyle = {
     left: (rect.left - frameRect.left) / zoom,
     top: (rect.top - frameRect.top) / zoom,
     width: rect.width / zoom,
@@ -122,8 +118,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   ];
 
   return (
-    <div className={styles.overlayContainer} style={style} ref={containerRef}>
-      {/* Margins */}
+    <div className={styles.overlayContainer} style={posStyle} ref={containerRef}>
       {margin && (
         <>
           <div className={`${styles.margin} ${styles.top}`} style={{ height: margin.t, top: -margin.t }} />
@@ -133,7 +128,6 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
         </>
       )}
 
-      {/* Paddings */}
       {padding && (
         <div className={styles.paddingContainer}>
           <div className={`${styles.padding} ${styles.top}`} style={{ height: padding.t }} />

@@ -3,7 +3,7 @@ import styles from "./Canvas.module.scss";
 import type { AppNode, Breakpoint } from "../../../types";
 import CNode from "./CNode";
 import SelectionOverlay from "./SelectionOverlay";
-import { find, getParentId } from "../../../utils/treeUtils";
+import { find, getParentId, getAllNodes } from "../../../utils/treeUtils";
 
 interface CanvasProps {
   tree: AppNode;
@@ -39,11 +39,20 @@ const Canvas: React.FC<CanvasProps> = ({
   onDropInto, onMove, onStyle, preview, grid, cdId, setCdId, zoom, setZoom, panX, panY, panning, 
   onMouseDown, onMouseMove, onMouseUp, breakpoint, isResizing, setIsResizing
 }) => {
-  const selId = selIds[selIds.length - 1] || null;
   const canRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null); 
+  const [frameHeight, setFrameHeight] = React.useState(0);
   const bpWidths: Record<Breakpoint, number> = { mobile: 375, tablet: 768, desktop: 1200, tv: 1440 };
+
+  React.useEffect(() => {
+    if (!frameRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      setFrameHeight(Math.round(entries[0].contentRect.height));
+    });
+    observer.observe(frameRef.current);
+    return () => observer.disconnect();
+  }, []);
   const currentWidth = bpWidths[breakpoint] || 1200;
   
   const [rootDrop, setRootDrop] = React.useState(false);
@@ -131,7 +140,7 @@ const Canvas: React.FC<CanvasProps> = ({
                 ))}
               </div>
               <span className={styles.frameInfo}>
-                {breakpoint} · {currentWidth}px · {Math.round(zoom * 100)}%
+                {breakpoint} · {currentWidth} × {frameHeight} px · {Math.round(zoom * 100)}%
               </span>
             </div>
           )}
@@ -201,39 +210,60 @@ const Canvas: React.FC<CanvasProps> = ({
               </div>
             )}
 
-            {!preview && selId && (() => {
-                const selNode = selId ? find(tree, selId) : null;
-                const parentId = selId ? getParentId(tree, selId) : null;
+            {!preview && getAllNodes(tree).map((n: AppNode) => {
+                const parentId = getParentId(tree, n.id);
                 const parentNode = parentId ? find(tree, parentId) : null;
-                const s = selNode?.style || {};
-                const extract = (v: any) => parseFloat(String(v || 0)) || 0;
+                const s = n.style || {};
+                const extractVal = (v: any) => parseFloat(String(v || 0)) || 0;
+                const m = {
+                  t: extractVal(s.marginTop),
+                  r: extractVal(s.marginRight),
+                  b: extractVal(s.marginBottom),
+                  l: extractVal(s.marginLeft)
+                };
+                const p = {
+                  t: extractVal(s.paddingTop),
+                  r: extractVal(s.paddingRight),
+                  b: extractVal(s.paddingBottom),
+                  l: extractVal(s.paddingLeft)
+                };
                 
                 return (
-                  <SelectionOverlay 
-                    selId={selId} 
-                    zoom={zoom} 
-                    panX={panX} 
-                    panY={panY} 
-                    frameRef={contentRef} 
-                    onStyle={onStyle}
-                    snap={grid}
-                    setIsResizing={setIsResizing}
-                    parentType={parentNode?.type}
-                    padding={{
-                      t: extract(s.paddingTop),
-                      r: extract(s.paddingRight),
-                      b: extract(s.paddingBottom),
-                      l: extract(s.paddingLeft)
-                    }}
-                    margin={{
-                      t: extract(s.marginTop),
-                      r: extract(s.marginRight),
-                      b: extract(s.marginBottom),
-                      l: extract(s.marginLeft)
-                    }}
-                  />
+                  <React.Fragment key={n.id}>
+                    {selIds.includes(n.id) && !preview && (
+                      <SelectionOverlay 
+                        selId={n.id}
+                        zoom={zoom}
+                        panX={panX}
+                        panY={panY}
+                        frameRef={canRef}
+                        onStyle={onStyle}
+                        setIsResizing={setIsResizing}
+                        parentType={parentNode?.type}
+                        padding={p}
+                        margin={m}
+                        snap={true}
+                      />
+                    )}
+
+                    {/* Logic Indicator */}
+                    {n.logic && Object.keys(n.logic).length > 0 && !preview && (
+                      <div 
+                        className={styles.logicBadge} 
+                        style={{ 
+                          position: "absolute",
+                          left: "4px",
+                          top: "4px",
+                          zIndex: 10
+                        }}
+                        title="Has Interactions"
+                      >
+                        ⚡
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
-              })()}
+              })}
           </div>
         </div>
       </div>

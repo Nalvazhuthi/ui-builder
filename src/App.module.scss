@@ -94,3 +94,69 @@
   align-items: center;
   gap: 8px;
 }
+
+.topHeader {
+  height: 48px;
+  background-color: #0b0b14;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 0%, #7c5cfc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  user-select: none;
+}
+
+.viewTabs {
+  display: flex;
+  gap: 4px;
+}
+
+.viewTab {
+  padding: 6px 16px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &Active {
+    color: #fff !important;
+    background: rgba(124, 92, 252, 0.15) !important;
+    box-shadow: inset 0 0 0 1px rgba(124, 92, 252, 0.3) !important;
+  }
+}
+
+.tabIcon {
+  font-size: 14px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
