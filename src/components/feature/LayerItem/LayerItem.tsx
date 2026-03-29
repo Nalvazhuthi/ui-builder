@@ -8,10 +8,10 @@ import CtxMenu from "../CtxMenu/CtxMenu";
 interface LayerItemProps {
   node: AppNode;
   depth: number;
-  selId: string | null;
+  selIds: string[];
   hovId: string | null;
   setHovId: (id: string | null) => void;
-  onSel: (id: string) => void;
+  onSel: (id: string, multi: boolean) => void;
   collapsed: Record<string, boolean>;
   onCollapse: (id: string) => void;
   onDel: (id: string) => void;
@@ -24,14 +24,15 @@ interface LayerItemProps {
   setTree: (tree: AppNode) => void;
   onMakeComponent: (id: string) => void;
   onRename: (id: string, name: string) => void;
+  onGroup: () => void;
 }
 
 const LayerItem: React.FC<LayerItemProps> = ({
-  node, depth, selId, hovId, setHovId, onSel, collapsed, onCollapse, 
-  onDel, onDup, onHide, onLock, cdId, setCdId, tree, setTree, onMakeComponent, onRename
+  node, depth, selIds, hovId, setHovId, onSel, collapsed, onCollapse, 
+  onDel, onDup, onHide, onLock, cdId, setCdId, tree, setTree, onMakeComponent, onRename, onGroup
 }) => {
   const has = (node.children || []).length > 0;
-  const isSel = selId === node.id;
+  const isSel = selIds.includes(node.id);
   const isCol = collapsed[node.id];
   const m = META[node.type] || {};
   const [ctx, setCtx] = useState<{ x: number, y: number } | null>(null);
@@ -81,7 +82,7 @@ const LayerItem: React.FC<LayerItemProps> = ({
             }
           }
         }}
-        onClick={e => { e.stopPropagation(); onSel(node.id); }}
+        onClick={e => { e.stopPropagation(); onSel(node.id, e.ctrlKey || e.metaKey); }}
         onDoubleClick={e => { e.stopPropagation(); setIsEditing(true); setEditName(node.name); }}
         onContextMenu={e => { e.preventDefault(); setCtx({ x: e.clientX, y: e.clientY }); }}
         onMouseEnter={() => setHovId(node.id)}
@@ -91,12 +92,20 @@ const LayerItem: React.FC<LayerItemProps> = ({
       >
         {dropPos === "before" && <div className={`${styles.dropLine} ${styles.dropBefore}`} />}
         {dropPos === "after" && <div className={`${styles.dropLine} ${styles.dropAfter}`} />}
-        <div className={styles.indentGuide} style={{ left: (depth * 18) - 10 }} />
+        
+        {Array.from({ length: depth }).map((_, i) => (
+          <div 
+            key={i} 
+            className={styles.indentGuide} 
+            style={{ left: 8 + i * 18 + 8 }} 
+          />
+        ))}
+
         <span 
           onClick={e => { e.stopPropagation(); has && onCollapse(node.id); }} 
           className={`${styles.collapse} ${isCol ? styles.isCollapsed : ""} ${!has ? styles.noChildren : ""}`}
         >
-          ▼
+          {isCol ? "▸" : "▾"}
         </span>
         <span className={styles.icon} style={{ color: node.isMaster ? "#a855f7" : node.masterId ? "#7c5cfc" : m.color }}>
           {node.isMaster ? "❖" : node.masterId ? "◇" : (m.icon || "◻")}
@@ -142,6 +151,8 @@ const LayerItem: React.FC<LayerItemProps> = ({
             ["Duplicate", () => { onDup(node.id); setCtx(null); }],
             ["Delete", () => { onDel(node.id); setCtx(null); }],
             null,
+            ["Group Selection", () => { onGroup(); setCtx(null); }],
+            null,
             [node.hidden ? "Show" : "Hide", () => { onHide(node.id); setCtx(null); }],
             [node.locked ? "Unlock" : "Lock", () => { onLock(node.id); setCtx(null); }],
             null,
@@ -155,7 +166,7 @@ const LayerItem: React.FC<LayerItemProps> = ({
           key={c.id} 
           node={c} 
           depth={depth + 1} 
-          selId={selId} 
+          selIds={selIds} 
           hovId={hovId} 
           setHovId={setHovId}
           onSel={onSel} 
@@ -171,6 +182,7 @@ const LayerItem: React.FC<LayerItemProps> = ({
           setTree={setTree} 
           onMakeComponent={onMakeComponent}
           onRename={onRename}
+          onGroup={onGroup}
         />
       ))}
     </div>

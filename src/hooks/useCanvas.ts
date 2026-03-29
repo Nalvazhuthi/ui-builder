@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { AppNode, Breakpoint } from "../types";
-import { find, upd, del, ins, dup, getParentId, uid } from "../utils/treeUtils";
+import { find, upd, del, ins, dup, getParentId, uid, mkNode, groupNodesInTree } from "../utils/treeUtils";
 
 export const useCanvas = (initialTree: AppNode) => {
   const [tree, setTree] = useState<AppNode>(() => {
@@ -20,7 +20,8 @@ export const useCanvas = (initialTree: AppNode) => {
   const [history, setHistory] = useState<AppNode[]>([tree]);
   const [historyIndex, setHistoryIndex] = useState(0);
   
-  const [selId, setSelId] = useState<string | null>(null);
+  const [selIds, setSelIds] = useState<string[]>([]);
+  const selId = selIds[selIds.length - 1] || null;
   const [hovId, setHovId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -56,8 +57,17 @@ export const useCanvas = (initialTree: AppNode) => {
   };
 
   // Selection handlers
-  const select = (id: string | null) => {
-    setSelId(id);
+  const select = (id: string | null, multi: boolean = false) => {
+    if (!id) { setSelIds([]); setEditId(null); return; }
+    if (multi) {
+      if (selIds.includes(id)) {
+        setSelIds(selIds.filter(i => i !== id));
+      } else {
+        setSelIds([...selIds, id]);
+      }
+    } else {
+      setSelIds([id]);
+    }
     setEditId(null);
   };
 
@@ -65,7 +75,7 @@ export const useCanvas = (initialTree: AppNode) => {
   const updateStyle = (id: string, style: any) => push(upd(tree, id, n => ({ ...n, style: { ...n.style, ...style } })));
   const updateContent = (id: string, content: string) => push(upd(tree, id, n => ({ ...n, content })));
   const deleteNode = (id: string) => {
-    if (selId === id) setSelId(null);
+    if (selIds.includes(id)) setSelIds(selIds.filter(i => i !== id));
     push(del(tree, id));
   };
   const duplicateNode = (id: string) => {
@@ -79,24 +89,38 @@ export const useCanvas = (initialTree: AppNode) => {
   const renameNode = (id: string, name: string) => push(upd(tree, id, n => ({ ...n, name })));
   const resetStyles = (id: string, defaultStyle: any) => push(upd(tree, id, n => ({ ...n, style: { ...defaultStyle } })));
 
+  const groupNodes = () => {
+    if (selIds.length < 1) return;
+    const firstId = selIds[0];
+    const parentId = getParentId(tree, firstId);
+    if (!parentId) return;
+
+    // Filter selection to only same-parent nodes
+    const validIds = selIds.filter(id => getParentId(tree, id) === parentId);
+    if (validIds.length === 0) return;
+
+    const group = mkNode("div");
+    group.name = "Group";
+    group.children = validIds.map(id => find(tree, id)!).filter(Boolean);
+    group.style = { display: 'flex', flexDirection: 'row', gap: '8px' }; 
+
+    const nextTree = groupNodesInTree(tree, validIds, group);
+    push(nextTree);
+    setSelIds([group.id]);
+  };
+
   const createComponent = (id: string) => {
     const node = find(tree, id);
     if (!node) return;
-    
-    // 1. Create a Master from the node
     const masterId = `m-${node.id}`;
     const master = { ...dup(node), id: masterId, isMaster: true, name: `Master: ${node.name}` };
-    
-    // 2. Replace the original node with an Instance
     const instance = { ...dup(node), masterId };
-    
     const nextTree = {
       ...upd(tree, id, () => instance),
       masters: { ...(tree.masters || {}), [masterId]: master }
     } as AppNode;
-    
     push(nextTree);
-    setSelId(instance.id);
+    setSelIds([instance.id]);
   };
 
   const useComponent = (masterId: string, parentId: string) => {
@@ -104,14 +128,14 @@ export const useCanvas = (initialTree: AppNode) => {
     if (!master) return;
     const instance = { ...dup(master), id: uid(), isMaster: false, masterId, name: master.name.replace("Master: ", "") };
     push(ins(tree, parentId, instance));
-    setSelId(instance.id);
+    setSelIds([instance.id]);
   };
 
   return {
     tree, setTree,
     history, historyIndex,
     undo, redo, push,
-    selId, setSelId: select,
+    selId, selIds, setSelId: select,
     hovId, setHovId,
     editId, setEditId,
     collapsed, setCollapsed,
@@ -123,6 +147,6 @@ export const useCanvas = (initialTree: AppNode) => {
     isResizing, setIsResizing,
     breakpoint, setBreakpoint,
     updateStyle, updateContent, deleteNode, duplicateNode, toggleHide, toggleLock, renameNode, resetStyles,
-    createComponent, useComponent
+    groupNodes, createComponent, useComponent
   };
 };

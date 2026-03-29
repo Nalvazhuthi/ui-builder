@@ -13,15 +13,18 @@ import TogGrp from "../../ui/TogGrp/TogGrp";
 import PropertyInput from "../../ui/PropertyInput/PropertyInput";
 import AdvancedPanel from "./AdvancedPanel.tsx";
 
+import { find } from "../../../utils/treeUtils";
+
 interface InspectorProps {
-  node: AppNode | null;
+  selIds: string[];
+  tree: AppNode;
   onStyle: (id: string, style: StyleProps) => void;
   onContent: (id: string, content: string) => void;
   onRename: (id: string, name: string) => void;
   onReset: (id: string) => void;
 }
 
-const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRename, onReset }) => {
+const Inspector: React.FC<InspectorProps> = ({ selIds, tree, onStyle, onContent, onRename, onReset }) => {
   const [panel, setPanel] = useState<"design" | "adv">("design");
   const [open, setOpen] = useState({
     layout: true, size: true, spacing: true, fill: true, stroke: false, typo: false, effects: false
@@ -29,7 +32,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
 
   const toggle = (k: keyof typeof open) => setOpen(o => ({ ...o, [k]: !o[k] }));
 
-  if (!node) {
+  if (selIds.length === 0) {
     return (
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>◻</div>
@@ -37,6 +40,18 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
       </div>
     );
   }
+
+  if (selIds.length > 1) {
+    return (
+      <div className={styles.empty}>
+        <div className={styles.emptyIcon}>📑</div>
+        <div className={styles.emptyText}>{selIds.length} elements selected<br />Press Ctrl+G to Group</div>
+      </div>
+    );
+  }
+
+  const node = find(tree, selIds[0]);
+  if (!node) return null;
 
   const s = node.style || {};
   const m = META[node.type] || {};
@@ -95,18 +110,91 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
         {panel === "design" ? (
           <>
             {/* Content Section */}
-            {["text", "heading", "button"].includes(node.type) && (
+            {["text", "heading", "button", "image", "icon"].includes(node.type) && (
               <Section label="Content" open={true} onToggle={() => { }}>
                 <div className={styles.contentEditor}>
-                  <textarea
-                    value={node.content}
-                    onChange={(e) => onContent(node.id, e.target.value)}
-                    className={styles.contentTextArea}
-                    placeholder="Type content..."
-                  />
-                  <div className={styles.contentFooter}>
-                    <span>{node.content?.length || 0} chars</span>
-                  </div>
+                  {node.type === "image" ? (
+                    <div className={styles.imageUploadGrp}>
+                      <Field label="Image URL">
+                        <Input 
+                          value={node.content} 
+                          onChange={(e) => onContent(node.id, e.target.value)} 
+                          placeholder="https://example.com/image.png"
+                        />
+                      </Field>
+                      <div className={styles.uploadRow}>
+                        <span>Or upload:</span>
+                        <input 
+                          type="file" accept="image/*" 
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (re) => onContent(node.id, re.target?.result as string);
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : node.type === "icon" ? (
+                    <div className={styles.imageUploadGrp}>
+                      <Field label="Icon Name">
+                        <Select 
+                          value={node.content || "user"} 
+                          options={["user", "home", "search", "settings", "bell"]} 
+                          onChange={(e) => onContent(node.id, e.target.value)} 
+                        />
+                      </Field>
+                      <div className={styles.uploadRow}>
+                        <span>Or SVG:</span>
+                        <input 
+                          type="file" accept=".svg" 
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (re) => onContent(node.id, `svg:${re.target?.result as string}`);
+                              reader.readAsText(file);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <textarea
+                      value={node.content}
+                      onChange={(e) => onContent(node.id, e.target.value)}
+                      className={styles.contentTextArea}
+                      placeholder="Type content..."
+                    />
+                  )}
+                  {node.type !== "image" && node.type !== "icon" && (
+                    <div className={styles.contentFooter}>
+                      <span>{node.content?.length || 0} chars</span>
+                    </div>
+                  )}
+                </div>
+              </Section>
+            )}
+
+            {node.type === "image" && (
+              <Section label="Image Scaling" open={true} onToggle={() => { }}>
+                <div className={styles.fieldGrp}>
+                  <Field label="Object Fit">
+                    <Select 
+                      value={s.objectFit || "cover"} 
+                      options={["cover", "contain", "fill", "none", "scale-down"]} 
+                      onChange={(e) => set("objectFit", e.target.value)} 
+                    />
+                  </Field>
+                  <Field label="Object Position">
+                    <Input 
+                      value={s.objectPosition || "center"} 
+                      onChange={(e) => set("objectPosition", e.target.value)} 
+                      placeholder="e.g. center or 50% 50%"
+                    />
+                  </Field>
                 </div>
               </Section>
             )}
@@ -260,6 +348,35 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                   ))}
                 </div>
               )}
+            </Section>
+
+            {/* Flex Child Section */}
+            <Section label="Flex Item" open={true} onToggle={() => { }}>
+              <div className={styles.grid2}>
+                <Field label="Flex">
+                  <Input 
+                    value={(s.flex as string) || ""} 
+                    onChange={(e) => set("flex", e.target.value)} 
+                    placeholder="e.g. 1, none, initial"
+                  />
+                </Field>
+                <Field label="Align Self">
+                  <Select 
+                    value={(s.alignSelf as string) || "auto"} 
+                    options={["auto", "flex-start", "center", "flex-end", "stretch", "baseline"]} 
+                    onChange={(e) => set("alignSelf", e.target.value)} 
+                  />
+                </Field>
+              </div>
+              <div className={styles.grid2} style={{ marginTop: '8px' }}>
+                <Field label="Order">
+                  <Input 
+                    type="number"
+                    value={(s.order as string) || "0"} 
+                    onChange={(e) => set("order", e.target.value)} 
+                  />
+                </Field>
+              </div>
             </Section>
 
             {/* Size Section */}
@@ -470,8 +587,8 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                 </Field>
                 <Field label="Line H">
                   <PropertyInput 
-                    value={s.lineHeight || "auto"} 
-                    units={["px", "%", "em", "rem", ""]}
+                    value={s.lineHeight || "normal"} 
+                    units={["", "px", "%", "em", "rem"]}
                     onChange={(v) => set("lineHeight", v)} 
                     onClear={() => clr("lineHeight")}
                     showClear={!!s.lineHeight}
@@ -480,6 +597,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                 <Field label="Letter Spc">
                   <PropertyInput 
                     value={s.letterSpacing || "normal"} 
+                    units={["px", "em", "rem", ""]}
                     onChange={(v) => set("letterSpacing", v)} 
                     onClear={() => clr("letterSpacing")}
                     showClear={!!s.letterSpacing}
@@ -507,7 +625,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
               <Field label="Font">
                 <Select 
                   value={(s.fontFamily as string) || "inherit"} 
-                  options={["inherit", "Inter", "Arial", "Roboto", "Georgia", "Courier New", "system-ui"]} 
+                  options={["inherit", "Outfit", "Inter", "Montserrat", "Playfair Display", "system-ui"]} 
                   onChange={(e) => set("fontFamily", e.target.value)} 
                 />
               </Field>
@@ -522,7 +640,7 @@ const Inspector: React.FC<InspectorProps> = ({ node, onStyle, onContent, onRenam
                 <Field label="Transform">
                   <Select 
                     value={(s.textTransform as string) || "none"} 
-                    options={["none", "uppercase", "lowercase", "capitalize"]} 
+                    options={["none", "uppercase", "lowercase", "capitalize", "titlecase"]} 
                     onChange={(e) => set("textTransform", e.target.value)} 
                   />
                 </Field>

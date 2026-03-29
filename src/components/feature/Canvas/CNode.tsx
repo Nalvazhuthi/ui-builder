@@ -5,10 +5,10 @@ import { META } from "../../../constants/metadata";
 
 interface CNodeProps {
   node: AppNode;
-  selId: string | null;
+  selIds: string[];
   hovId: string | null;
   setHovId: (id: string | null) => void;
-  onSel: (id: string) => void;
+  onSel: (id: string, multi: boolean) => void;
   editId: string | null;
   setEditId: (id: string | null) => void;
   onContent: (id: string, content: string) => void;
@@ -19,12 +19,21 @@ interface CNodeProps {
   setCdId: (id: string | null) => void;
 }
 
+const ICONS: Record<string, React.ReactNode> = {
+  user:     <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+  home:     <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+  search:   <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+  settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+  bell:     <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></>,
+};
+
 const CNode: React.FC<CNodeProps> = ({
-  node, selId, hovId, setHovId, onSel, editId, setEditId, onContent, onDrop, onMove, preview, cdId, setCdId
+  node, selIds, hovId, setHovId, onSel, editId, setEditId, onContent, onDrop, onMove, preview, cdId, setCdId
 }) => {
   if (node.hidden) return null;
   
-  const isSel = selId === node.id;
+  const isSel = selIds.includes(node.id);
+  const isPrimary = selIds[selIds.length - 1] === node.id;
   const isHov = hovId === node.id && !isSel;
   const [dropPos, setDropPos] = useState<"before" | "inside" | "after" | null>(null);
   const [drag, setDrag] = useState(false);
@@ -37,7 +46,6 @@ const CNode: React.FC<CNodeProps> = ({
   React.useEffect(() => {
     if (isEd && editRef.current) {
       editRef.current.focus();
-      // Select all text on double click
       const range = document.createRange();
       range.selectNodeContents(editRef.current);
       const sel = window.getSelection();
@@ -75,23 +83,50 @@ const CNode: React.FC<CNodeProps> = ({
     else if (cdId && cdId !== node.id) onMove(cdId, node.id, pos);
   };
 
-  const baseStyle = {
+  const baseStyle: any = {
+    position: "relative",
+    boxSizing: "border-box",
+    minWidth: 16,
+    minHeight: 16,
+    transition: "all 0.1s ease",
+    cursor: preview ? "default" : node.locked ? "not-allowed" : "pointer",
     ...node.style,
-    position: "relative" as const,
-    boxSizing: "border-box" as const,
-    minWidth: 24,
-    minHeight: 24,
-    backgroundColor: node.style?.backgroundColor || (isContainer ? "rgba(255, 255, 255, 0.02)" : undefined),
-    outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `2px solid #a78bfa` : isSel ? `1px solid transparent` : (isContainer ? "1px dashed rgba(255, 255, 255, 0.1)" : "1px solid transparent"),
+    whiteSpace: "pre-wrap",
+    backgroundColor: node.style?.backgroundColor,
+    outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `2px solid #a78bfa` : isSel ? `1px solid transparent` : (isContainer ? "1px dashed transparent" : "1px solid transparent"),
     outlineOffset: -1,
     boxShadow: isHov ? `inset 0 0 0 9999px rgba(167, 139, 250, 0.1)` : node.style?.boxShadow,
-    opacity: drag ? 0.35 : 1,
-    transition: "all 0.1s ease",
-    cursor: preview ? "default" : node.locked ? "not-allowed" : "pointer"
+    opacity: drag ? 0.35 : (node.style?.opacity !== undefined ? parseFloat(node.style.opacity as string) : 1),
   };
 
   const renderContent = () => {
-    if (node.type === "image") return <div className={styles.imagePlaceholder}>⬚</div>;
+    if (node.type === "image") {
+      if (!node.content) return <div className={styles.imagePlaceholder}>⬚</div>;
+      return <img src={node.content} alt={node.name} style={{ width: '100%', height: '100%', objectFit: (node.style as any).objectFit || 'cover', objectPosition: (node.style as any).objectPosition || 'center', borderRadius: 'inherit' }} />;
+    }
+    
+    if (node.type === "icon") {
+      const isCustom = node.content?.startsWith("svg:");
+      if (isCustom) {
+        return (
+          <div 
+            style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            dangerouslySetInnerHTML={{ __html: node.content!.replace("svg:", "") }}
+          />
+        );
+      }
+      const iconKey = (node.content || "user").toLowerCase();
+      return (
+        <svg 
+          viewBox="0 0 24 24" fill="none" 
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
+          style={{ width: '100%', height: '100%' }}
+        >
+          {ICONS[iconKey] || ICONS.user}
+        </svg>
+      );
+    }
+
     if (node.type === "input") return <input placeholder={node.content || "Input…"} className={styles.inputPreview} style={node.style as any} readOnly />;
     if (isEd) return (
       <span 
@@ -105,7 +140,13 @@ const CNode: React.FC<CNodeProps> = ({
         {node.content}
       </span>
     );
-    return node.content || null;
+
+    let content = node.content;
+    const style = node.style || {};
+    if ((style as any).textTransform === 'titlecase' && content) {
+      content = content.toLowerCase().replace(/(^|\s)\S/g, l => l.toUpperCase());
+    }
+    return content || null;
   };
 
   return (
@@ -121,12 +162,12 @@ const CNode: React.FC<CNodeProps> = ({
       onDrop={handleDrop}
       onMouseEnter={e => { if (!preview) { e.stopPropagation(); setHovId(node.id); } }}
       onMouseLeave={e => { if (!preview) { e.stopPropagation(); setHovId(null); } }}
-      onClick={e => { if (!preview && !node.locked) { e.stopPropagation(); onSel(node.id); } }}
+      onClick={e => { if (!preview && !node.locked) { e.stopPropagation(); onSel(node.id, e.ctrlKey || e.metaKey); } }}
       onDoubleClick={e => { if (!preview && !node.locked) { e.stopPropagation(); setEditId(node.id); } }}
     >
       {!preview && dropPos === "before" && <div className={`${styles.insertLine} ${styles.before}`} />}
       {!preview && dropPos === "after" && <div className={`${styles.insertLine} ${styles.after}`} />}
-      {!preview && isSel && <div className={styles.selBadge}><span>{m.icon}</span><span>{node.name}</span></div>}
+      {!preview && isPrimary && <div className={styles.selBadge}><span>{m.icon}</span><span>{node.name}</span></div>}
       {!preview && isHov && !isSel && <div className={styles.hovBadge}>{node.name}</div>}
       {!preview && dropPos === "inside" && <div className={styles.dropInside}><span className={styles.dropText}>Drop inside "{node.name}"</span></div>}
       
@@ -136,7 +177,7 @@ const CNode: React.FC<CNodeProps> = ({
         <CNode 
           key={c.id} 
           node={c} 
-          selId={selId} 
+          selIds={selIds} 
           hovId={hovId} 
           setHovId={setHovId} 
           onSel={onSel} 

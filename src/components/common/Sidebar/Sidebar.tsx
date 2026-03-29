@@ -20,10 +20,10 @@ interface SidebarProps {
   libExpanded: Record<string, boolean>;
   setLibExpanded: (expanded: Record<string, boolean>) => void;
   tree: AppNode;
-  selId: string | null;
+  selIds: string[];
   hovId: string | null;
   setHovId: (id: string | null) => void;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, multi: boolean) => void;
   collapsed: Record<string, boolean>;
   setCollapsed: (id: string) => void;
   onDeleteNode: (id: string) => void;
@@ -39,13 +39,14 @@ interface SidebarProps {
   onCreateComponent: (id: string) => void;
   onUseComponent: (masterId: string, parentId: string) => void;
   onRename: (id: string, name: string) => void;
+  onGroup: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
-  leftTab, setLeftTab, libExpanded, setLibExpanded, tree, selId, hovId, 
+  leftTab, setLeftTab, libExpanded, setLibExpanded, tree, selIds, hovId, 
   setHovId, onSelect, collapsed, setCollapsed, onDeleteNode, onDuplicateNode, 
   onToggleHide, onToggleLock, cdId, setCdId, setTree, setGhostType, setDragging, setGhostPos,
-  onCreateComponent, onUseComponent, onRename
+  onCreateComponent, onUseComponent, onRename, onGroup
 }) => {
   return (
     <div className={styles.sidebar}>
@@ -112,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div 
                   key={id} 
                   className={styles.componentItem}
-                  onClick={() => onUseComponent(id, selId || "root")}
+                  onClick={() => onUseComponent(id, selIds[0] || "root")}
                 >
                   <span className={styles.componentIcon} style={{ color: "#7c5cfc" }}>◈</span>
                   <span className={styles.componentLabel}>{master.name.replace("Master: ", "")}</span>
@@ -133,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   key={c.id} 
                   node={c} 
                   depth={0} 
-                  selId={selId} 
+                  selIds={selIds} 
                   hovId={hovId} 
                   setHovId={setHovId}
                   onSel={onSelect} 
@@ -149,6 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   setTree={setTree} 
                   onMakeComponent={onCreateComponent}
                   onRename={onRename}
+                  onGroup={onGroup}
                 />
               ))
             )}

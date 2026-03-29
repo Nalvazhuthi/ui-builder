@@ -19,15 +19,22 @@ const PropertyInput: React.FC<PropertyInputProps> = ({
   
   // Parse value and unit
   const valStr = value.toString();
-  const isKeyword = valStr === "auto" || valStr === "fit-content" || valStr === "fit";
+  const keywords = ["auto", "fit-content", "fit", "normal", "inherit", "initial", "unset", "none"];
+  const isKeyword = keywords.includes(valStr);
   const numMatch = !isKeyword ? valStr.match(/^[-+]?[0-9]*\.?[0-9]+/) : null;
   const currentNum = numMatch ? parseFloat(numMatch[0]) : 0;
   
   let currentUnit = units[0];
   if (isKeyword) {
     currentUnit = valStr === "fit" ? "fit-content" : valStr;
-  } else if (valStr.replace(numMatch ? numMatch[0] : "", "")) {
-    currentUnit = valStr.replace(numMatch ? numMatch[0] : "", "");
+  } else {
+    const extracted = valStr.replace(numMatch ? numMatch[0] : "", "");
+    // If unit is missing but "" is a valid option, use it. Otherwise use extracted unit.
+    if (extracted !== "") {
+      currentUnit = extracted;
+    } else if (units.includes("")) {
+      currentUnit = "";
+    }
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {

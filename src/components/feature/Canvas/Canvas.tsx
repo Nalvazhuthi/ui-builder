@@ -7,10 +7,10 @@ import { find, getParentId } from "../../../utils/treeUtils";
 
 interface CanvasProps {
   tree: AppNode;
-  selId: string | null;
+  selIds: string[];
   hovId: string | null;
   setHovId: (id: string | null) => void;
-  onSel: (id: string | null) => void;
+  onSel: (id: string | null, multi: boolean) => void;
   editId: string | null;
   setEditId: (id: string | null) => void;
   onContent: (id: string, content: string) => void;
@@ -35,10 +35,11 @@ interface CanvasProps {
 }
 
 const Canvas: React.FC<CanvasProps> = ({
-  tree, selId, hovId, setHovId, onSel, editId, setEditId, onContent, 
+  tree, selIds, hovId, setHovId, onSel, editId, setEditId, onContent, 
   onDropInto, onMove, onStyle, preview, grid, cdId, setCdId, zoom, setZoom, panX, panY, panning, 
   onMouseDown, onMouseMove, onMouseUp, breakpoint, isResizing, setIsResizing
 }) => {
+  const selId = selIds[selIds.length - 1] || null;
   const canRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null); 
@@ -89,10 +90,10 @@ const Canvas: React.FC<CanvasProps> = ({
         const isOuter = t === e.currentTarget || t.classList.contains(styles.grid) || t.classList.contains(styles.frameContainer);
         
         if (isOuter) {
-          onSel(null);
+          onSel(null, false);
           setEditId(null);
         } else if (t.classList.contains(styles.canvasContent)) {
-          onSel("root"); 
+          onSel("root", false); 
           setEditId(null); 
         }
       }}
@@ -142,6 +143,19 @@ const Canvas: React.FC<CanvasProps> = ({
             style={(tree.style as any)}
             onDragOver={e => { e.preventDefault(); e.stopPropagation(); setRootDrop(true); }}
             onDragLeave={() => setRootDrop(false)}
+            onClick={(e) => { 
+              if (isResizing) return;
+              const t = e.target as HTMLElement;
+              const isOuter = t === e.currentTarget || t.classList.contains(styles.grid) || t.classList.contains(styles.frameContainer);
+              
+              if (isOuter) {
+                onSel(null, false);
+                setEditId(null);
+              } else if (t.classList.contains(styles.canvasContent)) {
+                onSel("root", false); 
+                setEditId(null); 
+              }
+            }}
             onDrop={e => {
               e.preventDefault(); e.stopPropagation(); setRootDrop(false);
               const ct = e.dataTransfer.getData("componentType");
@@ -153,7 +167,7 @@ const Canvas: React.FC<CanvasProps> = ({
               <CNode 
                 key={c.id} 
                 node={c} 
-                selId={preview ? null : selId} 
+                selIds={preview ? [] : selIds} 
                 hovId={hovId} 
                 setHovId={setHovId}
                 onSel={onSel} 

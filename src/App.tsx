@@ -63,8 +63,15 @@ const App: React.FC = () => {
         if (e.shiftKey) canvas.redo();
         else canvas.undo();
       }
+      if (e.key === "g" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        canvas.groupNodes();
+      }
       if (e.key === "Backspace" || e.key === "Delete") {
-        if (canvas.selId && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        const isEdit = document.activeElement?.tagName === "INPUT" || 
+                       document.activeElement?.tagName === "TEXTAREA" ||
+                       (document.activeElement as HTMLElement)?.isContentEditable;
+        if (canvas.selId && !isEdit) {
           canvas.deleteNode(canvas.selId);
         }
       }
@@ -170,7 +177,7 @@ const App: React.FC = () => {
             leftTab={leftTab} setLeftTab={setLeftTab}
             libExpanded={libExpanded} setLibExpanded={setLibExpanded}
             tree={canvas.tree}
-            selId={canvas.selId}
+            selIds={canvas.selIds}
             hovId={canvas.hovId}
             setHovId={canvas.setHovId}
             onSelect={canvas.setSelId}
@@ -188,6 +195,7 @@ const App: React.FC = () => {
             onCreateComponent={canvas.createComponent}
             onUseComponent={canvas.useComponent}
             onRename={canvas.renameNode}
+            onGroup={canvas.groupNodes}
           />
         )}
 
@@ -197,7 +205,7 @@ const App: React.FC = () => {
           ) : (
             <Canvas 
               tree={canvas.tree}
-              selId={canvas.selId}
+              selIds={canvas.selIds}
               hovId={canvas.hovId}
               setHovId={canvas.setHovId}
               onSel={canvas.setSelId}
@@ -253,7 +261,8 @@ const App: React.FC = () => {
             <div className={styles.rightContent}>
               {rightPanel === "insp" ? (
                 <Inspector 
-                  node={find(canvas.tree, canvas.selId || "")}
+                  selIds={canvas.selIds}
+                  tree={canvas.tree}
                   onStyle={canvas.updateStyle}
                   onContent={canvas.updateContent}
                   onRename={canvas.renameNode}

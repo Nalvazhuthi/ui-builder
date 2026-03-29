@@ -78,3 +78,18 @@ export const toPascal = (raw: string) => {
   const s = raw.replace(/\s+/g, " ").trim().replace(/[^a-zA-Z0-9 ]/g, "");
   return s.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("") || "Component";
 };
+
+export const groupNodesInTree = (t: AppNode, ids: string[], groupNode: AppNode): AppNode => {
+  // If this level contains any of the target IDs, filter them out
+  const containsAny = (t.children || []).some(c => ids.includes(c.id));
+  
+  if (containsAny) {
+    const firstIdx = (t.children || []).findIndex(c => ids.includes(c.id));
+    const nextChildren = (t.children || []).filter(c => !ids.includes(c.id));
+    // Insert group at the position of the first found sibling
+    nextChildren.splice(firstIdx, 0, groupNode);
+    return { ...t, children: nextChildren };
+  }
+
+  return { ...t, children: (t.children || []).map(c => groupNodesInTree(c, ids, groupNode)) };
+};
