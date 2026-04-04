@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import styles from "./CNode.module.scss";
 import type { AppNode } from "../../../types";
-import { META } from "../../../constants/metadata";
 
 interface CNodeProps {
   node: AppNode;
@@ -12,11 +11,14 @@ interface CNodeProps {
   editId: string | null;
   setEditId: (id: string | null) => void;
   onContent: (id: string, content: string) => void;
-  onDrop: (compType: string, targetId: string, position: "before" | "inside" | "after") => void;
+  onDrop: (compType: string, targetId: string, position: "before" | "inside" | "after", masterId?: string) => void;
   onMove: (srcId: string, targetId: string, position: "before" | "inside" | "after") => void;
   preview?: boolean;
   cdId: string | null;
   setCdId: (id: string | null) => void;
+  setDragPreview: (preview: { type?: string; srcId?: string; targetId: string; position: 'before' | 'inside' | 'after' } | null) => void;
+  dragPreview: { type?: string; srcId?: string; targetId: string; position: 'before' | 'inside' | 'after' } | null;
+  draggingType: string | null;
 }
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -28,17 +30,16 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 const CNode: React.FC<CNodeProps> = ({
-  node, selIds, hovId, setHovId, onSel, editId, setEditId, onContent, onDrop, onMove, preview, cdId, setCdId
+  node, selIds, hovId, setHovId, onSel, editId, setEditId, onContent, onDrop, onMove, preview, cdId, setCdId,
+  setDragPreview, dragPreview, draggingType
 }) => {
   if (node.hidden) return null;
   
   const isSel = selIds.includes(node.id);
-  const isPrimary = selIds[selIds.length - 1] === node.id;
   const isHov = hovId === node.id && !isSel;
   const [dropPos, setDropPos] = useState<"before" | "inside" | "after" | null>(null);
   const [drag, setDrag] = useState(false);
   const isEd = editId === node.id;
-  const m = META[node.type] || {};
   const nodeRef = useRef<HTMLDivElement>(null);
   const editRef = useRef<HTMLSpanElement>(null);
   const isContainer = ["section", "container", "grid", "flex-row", "flex-col", "div", "navbar", "sidebar", "footer", "card", "modal", "tabs", "accordion"].includes(node.type);
@@ -67,10 +68,12 @@ const CNode: React.FC<CNodeProps> = ({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (cdId === node.id) return;
+    if (cdId === node.id || node.isPreview) return;
     const zone = getZone(e);
     const effectiveZone = (zone === "inside" && !isContainer) ? "after" as const : zone as "before" | "inside" | "after";
     setDropPos(effectiveZone);
+    if (draggingType) setDragPreview({ type: draggingType, targetId: node.id, position: effectiveZone });
+    else if (cdId) setDragPreview({ srcId: cdId, targetId: node.id, position: effectiveZone });
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -78,8 +81,10 @@ const CNode: React.FC<CNodeProps> = ({
     e.stopPropagation();
     const pos = dropPos || "inside";
     setDropPos(null);
+    setDragPreview(null);
     const ct = e.dataTransfer.getData("componentType");
-    if (ct) onDrop(ct, node.id, pos);
+    const mt = e.dataTransfer.getData("masterId");
+    if (ct || mt) onDrop(ct, node.id, pos, mt);
     else if (cdId && cdId !== node.id) onMove(cdId, node.id, pos);
   };
 
@@ -98,10 +103,12 @@ const CNode: React.FC<CNodeProps> = ({
     flexShrink: node.style?.flexShrink ?? (isPreciseHeight ? 0 : 1),
     whiteSpace: "pre-wrap",
     backgroundColor: node.style?.backgroundColor,
-    outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `2px solid #a78bfa` : isSel ? `1px solid transparent` : (isContainer ? "1px dashed transparent" : "1px solid transparent"),
+    outline: preview ? "none" : dropPos === "inside" ? `2px dashed #7c5cfc` : isHov ? `1px solid #7c5cfc` : isSel ? `1px solid #7c5cfc` : (isContainer ? "1px dashed transparent" : "1px solid transparent"),
     outlineOffset: -1,
-    boxShadow: isHov ? `inset 0 0 0 9999px rgba(167, 139, 250, 0.1)` : node.style?.boxShadow,
-    opacity: drag ? 0.35 : (node.style?.opacity !== undefined ? parseFloat(node.style.opacity as string) : 1),
+    boxShadow: isHov && !isSel ? `inset 0 0 0 9999px rgba(124, 92, 252, 0.05)` : node.style?.boxShadow,
+    opacity: node.isPreview ? 0.6 : (drag ? 0.35 : (node.style?.opacity !== undefined ? parseFloat(node.style.opacity as string) : 1)),
+    pointerEvents: node.isPreview ? 'none' : 'auto',
+    border: node.isPreview ? '1px dashed #7c5cfc' : undefined,
   };
 
   const renderContent = () => {
@@ -161,21 +168,22 @@ const CNode: React.FC<CNodeProps> = ({
       style={baseStyle as any}
       draggable={!preview && !node.locked}
       onDragStart={e => { if (preview || node.locked) { e.preventDefault(); return; } e.stopPropagation(); setDrag(true); setCdId(node.id); }}
-      onDragEnd={() => { setDrag(false); setCdId(null); setDropPos(null); }}
+      onDragEnd={() => { setDrag(false); setCdId(null); setDropPos(null); setDragPreview(null); }}
       onDragOver={handleDragOver}
-      onDragLeave={e => { if (!nodeRef.current?.contains(e.relatedTarget as Node)) setDropPos(null); }}
+      onDragLeave={e => { 
+        if (!nodeRef.current?.contains(e.relatedTarget as Node)) {
+          setDropPos(null); 
+          setDragPreview(null);
+        }
+      }}
       onDrop={handleDrop}
       onMouseEnter={e => { if (!preview) { e.stopPropagation(); setHovId(node.id); } }}
       onMouseLeave={e => { if (!preview) { e.stopPropagation(); setHovId(null); } }}
       onClick={e => { if (!preview && !node.locked) { e.stopPropagation(); onSel(node.id, e.ctrlKey || e.metaKey); } }}
       onDoubleClick={e => { if (!preview && !node.locked) { e.stopPropagation(); setEditId(node.id); } }}
     >
-      {!preview && dropPos === "before" && <div className={`${styles.insertLine} ${styles.before}`} />}
-      {!preview && dropPos === "after" && <div className={`${styles.insertLine} ${styles.after}`} />}
-      {!preview && isPrimary && <div className={styles.selBadge}><span>{m.icon}</span><span>{node.name}</span></div>}
-      {!preview && isHov && !isSel && <div className={styles.hovBadge}>{node.name}</div>}
-      {!preview && dropPos === "inside" && <div className={styles.dropInside}><span className={styles.dropText}>Drop inside "{node.name}"</span></div>}
-      
+      {!preview && !node.isPreview && dropPos === "before" && <div className={`${styles.insertLine} ${styles.before}`} />}
+      {!preview && !node.isPreview && dropPos === "after" && <div className={`${styles.insertLine} ${styles.after}`} />}
       {renderContent()}
       
       {(node.children || []).map(c => (
@@ -194,6 +202,9 @@ const CNode: React.FC<CNodeProps> = ({
           preview={preview} 
           cdId={cdId} 
           setCdId={setCdId} 
+          setDragPreview={setDragPreview}
+          dragPreview={dragPreview}
+          draggingType={draggingType}
         />
       ))}
       
@@ -202,4 +213,4 @@ const CNode: React.FC<CNodeProps> = ({
   );
 };
 
-export default CNode;
+export default React.memo(CNode);

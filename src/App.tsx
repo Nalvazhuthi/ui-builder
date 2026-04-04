@@ -32,6 +32,8 @@ const initialTree: AppNode = {
   style: { 
     display: "flex", 
     flexDirection: "column", 
+    alignItems: "stretch",
+    width: "100%",
     minHeight: "100%", 
     padding: "0px", 
     backgroundColor: "#ffffff",
@@ -176,15 +178,16 @@ const App: React.FC = () => {
                 onUseComponent={canvas.useComponent}
                 onRename={canvas.renameNode}
                 onGroup={canvas.groupNodes}
+                setDragPreview={canvas.setDragPreview}
               />
             )}
-
+ 
             <div className={styles.canvasArea}>
               {tab === "3d" ? (
                 <ThreeDView />
               ) : (
                 <Canvas 
-                  tree={canvas.tree}
+                  tree={canvas.previewTree}
                   selIds={canvas.selIds}
                   hovId={canvas.hovId}
                   setHovId={canvas.setHovId}
@@ -202,26 +205,37 @@ const App: React.FC = () => {
                   setZoom={canvas.setZoom}
                   panX={canvas.panX}
                   panY={canvas.panY}
+                  setPanX={canvas.setPanX}
+                  setPanY={canvas.setPanY}
                   panning={canvas.panning}
                   isResizing={canvas.isResizing}
                   setIsResizing={canvas.setIsResizing}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
+                  onMouseUp={() => {
+                    handleMouseUp();
+                    canvas.setDragPreview(null);
+                  }}
                   breakpoint={canvas.breakpoint}
+                  setDragPreview={canvas.setDragPreview}
+                  dragPreview={canvas.dragPreview}
+                  draggingType={ghostType}
                 />
               )}
 
-              {/* Ghost for DND */}
-              {dragging && ghostType && ghostPos && (
-                <div 
-                  className={styles.ghost}
-                  style={{ left: ghostPos.x, top: ghostPos.y }}
-                >
-                  <span style={{ color: META[ghostType]?.color || '#fff' }}>{META[ghostType]?.icon || "❖"}</span>
-                  <span>{META[ghostType]?.label || ghostType}</span>
-                </div>
-              )}
+            {/* Ghost for DND */}
+            {dragging && ghostType && ghostPos && (
+              <div 
+                className={styles.ghost}
+                style={{ 
+                  transform: `translate3d(${ghostPos.x}px, ${ghostPos.y}px, 0)`,
+                  willChange: 'transform'
+                }}
+              >
+                <span style={{ color: META[ghostType]?.label === "Navbar" ? "#06b6d4" : (META[ghostType]?.color || '#fff') }}>{META[ghostType]?.icon || "❖"}</span>
+                <span>{META[ghostType]?.label || ghostType}</span>
+              </div>
+            )}
             </div>
 
             {!preview && (
@@ -291,6 +305,7 @@ const App: React.FC = () => {
           tab={tab} setTab={setTab}
           breakpoint={canvas.breakpoint} setBreakpoint={canvas.setBreakpoint}
           zoom={canvas.zoom}
+          centerView={canvas.centerView}
           preview={preview} setPreview={setPreview}
           grid={grid} setGrid={setGrid}
           undo={canvas.undo} redo={canvas.redo}

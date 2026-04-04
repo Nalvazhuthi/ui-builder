@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import type { AppNode, Breakpoint } from "../types";
 import { find, upd, del, ins, dup, getParentId, uid, mkNode, groupNodesInTree, insBefore, insAfter, ids } from "../utils/treeUtils";
 
@@ -34,6 +34,12 @@ export const useCanvas = (initialTree: AppNode) => {
   
   const [breakpoint, setBreakpoint] = useState<Breakpoint>("desktop");
   const [isResizing, setIsResizing] = useState(false);
+  const [dragPreview, setDragPreview] = useState<{ 
+    type?: string; 
+    srcId?: string;
+    targetId: string; 
+    position: 'before' | 'inside' | 'after' 
+  } | null>(null);
 
   const push = useCallback((t: AppNode) => {
     const nextHistory = [...history.slice(0, historyIndex + 1), t];
@@ -41,6 +47,30 @@ export const useCanvas = (initialTree: AppNode) => {
     setHistoryIndex(nextHistory.length - 1);
     setTree(t);
   }, [history, historyIndex]);
+
+  const previewTree = useMemo(() => {
+    if (!dragPreview) return tree;
+    
+    let previewNode: AppNode | null = null;
+    let nextTree = tree;
+    
+    if (dragPreview.srcId) {
+      const srcNode = find(tree, dragPreview.srcId);
+      if (srcNode) {
+        nextTree = del(tree, dragPreview.srcId);
+        previewNode = { ...srcNode, isPreview: true };
+      }
+    } else if (dragPreview.type) {
+      previewNode = { ...mkNode(dragPreview.type), id: 'preview-node', isPreview: true };
+    }
+
+    if (!previewNode) return tree;
+
+    if (dragPreview.targetId === "root") return ins(nextTree, "root", previewNode);
+    if (dragPreview.position === "inside") return ins(nextTree, dragPreview.targetId, previewNode);
+    if (dragPreview.position === "before") return insBefore(nextTree, dragPreview.targetId, previewNode);
+    return insAfter(nextTree, dragPreview.targetId, previewNode);
+  }, [tree, dragPreview]);
 
   const undo = () => {
     if (historyIndex > 0) {
@@ -137,6 +167,22 @@ export const useCanvas = (initialTree: AppNode) => {
     setSelIds([instance.id]);
   };
 
+  const centerView = useCallback(() => {
+    setPanX(0);
+    setPanY(0);
+    
+    // Auto-calculate zoom based on window
+    const containerWidth = window.innerWidth - 600; // rough estimate for sidebar and inspector
+    const containerHeight = window.innerHeight - 150; // top header
+    const frameWidth = { default: 1440, mobile: 375, tablet: 768, desktop: 1200, tv: 1440 }[breakpoint] || 1200;
+    const frameHeight = 820;
+
+    const zoomW = (containerWidth - 100) / frameWidth;
+    const zoomH = (containerHeight - 100) / frameHeight;
+    const optimal = Math.min(1, zoomW, zoomH);
+    setZoom(Number(optimal.toFixed(2)));
+  }, [breakpoint]);
+
   return {
     tree, setTree,
     history, historyIndex,
@@ -152,11 +198,23 @@ export const useCanvas = (initialTree: AppNode) => {
     panStart, setPanStart,
     isResizing, setIsResizing,
     breakpoint, setBreakpoint,
+    dragPreview, setDragPreview,
+    previewTree,
     updateStyle, updateContent, deleteNode, duplicateNode, toggleHide, toggleLock, renameNode, resetStyles,
     updateLogic, updateVariables,
     groupNodes, createComponent, useComponent,
-    onDropInto: (compType: string, targetId: string, position: "before" | "inside" | "after") => {
-      const newNode = mkNode(compType);
+    centerView,
+    onDropInto: (compType: string, targetId: string, position: "before" | "inside" | "after", masterId?: string) => {
+      let newNode: AppNode;
+      if (masterId) {
+        const master = tree.masters?.[masterId];
+        if (!master) return;
+        newNode = { ...dup(master), id: uid(), isMaster: false, masterId, name: master.name.replace("Master: ", "") };
+      } else {
+        newNode = mkNode(compType);
+      }
+      
+      setDragPreview(null);
       if (position === "inside") {
         push(ins(tree, targetId, newNode));
       } else if (position === "before") {
@@ -167,9 +225,10 @@ export const useCanvas = (initialTree: AppNode) => {
       select(newNode.id);
     },
     onMove: (srcId: string, targetId: string, position: "before" | "inside" | "after") => {
+      setDragPreview(null);
       if (srcId === targetId) return;
       const srcNode = find(tree, srcId);
-      if (!srcNode) return;
+      if (!srcNode || !srcNode.id) return;
       if (ids(srcNode).includes(targetId)) return;
       
       let next = del(tree, srcId);

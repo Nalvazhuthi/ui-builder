@@ -3,7 +3,7 @@ import styles from "./Canvas.module.scss";
 import type { AppNode, Breakpoint } from "../../../types";
 import CNode from "./CNode";
 import SelectionOverlay from "./SelectionOverlay";
-import { find, getParentId, getAllNodes } from "../../../utils/treeUtils";
+import { getAllNodes } from "../../../utils/treeUtils";
 
 interface CanvasProps {
   tree: AppNode;
@@ -14,7 +14,7 @@ interface CanvasProps {
   editId: string | null;
   setEditId: (id: string | null) => void;
   onContent: (id: string, content: string) => void;
-  onDropInto: (compType: string, targetId: string, position: "before" | "inside" | "after") => void;
+  onDropInto: (compType: string, targetId: string, position: "before" | "inside" | "after", masterId?: string) => void;
   onMove: (srcId: string, targetId: string, position: "before" | "inside" | "after") => void;
   onStyle: (id: string, style: any) => void;
   preview: boolean;
@@ -25,25 +25,31 @@ interface CanvasProps {
   setZoom: (z: number) => void;
   panX: number;
   panY: number;
+  setPanX: (x: number) => void;
+  setPanY: (y: number) => void;
   panning: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
-  breakpoint: Breakpoint;
   isResizing: boolean;
   setIsResizing: (val: boolean) => void;
+  dragPreview: { type?: string; srcId?: string; targetId: string; position: 'before' | 'inside' | 'after' } | null;
+  setDragPreview: (preview: { type?: string; srcId?: string; targetId: string; position: 'before' | 'inside' | 'after' } | null) => void;
+  draggingType: string | null;
+  breakpoint: Breakpoint;
 }
 
 const Canvas: React.FC<CanvasProps> = ({
   tree, selIds, hovId, setHovId, onSel, editId, setEditId, onContent, 
-  onDropInto, onMove, onStyle, preview, grid, cdId, setCdId, zoom, setZoom, panX, panY, panning, 
-  onMouseDown, onMouseMove, onMouseUp, breakpoint, isResizing, setIsResizing
+  onDropInto, onMove, onStyle, preview, grid, cdId, setCdId, zoom, setZoom, panX, panY, setPanX, setPanY, panning, 
+  onMouseDown, onMouseMove, onMouseUp, breakpoint, isResizing, setIsResizing,
+  dragPreview, setDragPreview, draggingType
 }) => {
   const canRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null); 
   const [frameHeight, setFrameHeight] = React.useState(0);
-  const bpWidths: Record<Breakpoint, number> = { mobile: 375, tablet: 768, desktop: 1200, tv: 1440 };
+  const bpWidths: Record<Breakpoint, number> = { default: 1440, mobile: 375, tablet: 768, desktop: 1200, tv: 1440 };
 
   React.useEffect(() => {
     if (!frameRef.current) return;
@@ -64,25 +70,31 @@ const Canvas: React.FC<CanvasProps> = ({
     // Use a small timeout to ensure the container dimensions are ready
     const timer = setTimeout(() => {
       const containerWidth = canRef.current?.offsetWidth || 0;
-      const padding = 120; // Ensure some breathing room
-      const availableWidth = containerWidth - padding;
+      const containerHeight = canRef.current?.offsetHeight || 0;
+      const padding = 100; // Ensure some breathing room
       
-      if (currentWidth > availableWidth && availableWidth > 0) {
-        const optimalZoom = Math.min(1, availableWidth / currentWidth);
-        setZoom(Number(optimalZoom.toFixed(2)));
-      } else {
-        setZoom(1);
-      }
+      const availableWidth = containerWidth - padding;
+      const availableHeight = containerHeight - padding;
+      const frameHeight = 820; // Matches fixed height in SCSS
+
+      const zoomW = availableWidth / currentWidth;
+      const zoomH = availableHeight / frameHeight;
+      const optimalZoom = Math.min(1, zoomW, zoomH);
+      
+      setZoom(Number(optimalZoom.toFixed(2)));
+      setPanX(0);
+      setPanY(0);
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [breakpoint, preview, currentWidth, setZoom]);
+  }, [breakpoint, preview, currentWidth, setZoom, setPanX, setPanY]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const ct = e.dataTransfer.getData("componentType");
-    if (ct) onDropInto(ct, "root", "inside");
+    const mt = e.dataTransfer.getData("masterId");
+    if (ct || mt) onDropInto(ct, "root", "inside", mt);
     else if (cdId) onMove(cdId, "root", "inside");
   };
 
@@ -150,8 +162,14 @@ const Canvas: React.FC<CanvasProps> = ({
             data-node-id="root"
             className={`${styles.canvasContent} custom-scroll`}
             style={(tree.style as any)}
-            onDragOver={e => { e.preventDefault(); e.stopPropagation(); setRootDrop(true); }}
-            onDragLeave={() => setRootDrop(false)}
+            onDragOver={e => { 
+              e.preventDefault(); 
+              e.stopPropagation(); 
+              setRootDrop(true); 
+              if (draggingType) setDragPreview({ type: draggingType, targetId: "root", position: "inside" });
+              else if (cdId) setDragPreview({ srcId: cdId, targetId: "root", position: "inside" });
+            }}
+            onDragLeave={() => { setRootDrop(false); setDragPreview(null); }}
             onClick={(e) => { 
               if (isResizing) return;
               const t = e.target as HTMLElement;
@@ -167,6 +185,7 @@ const Canvas: React.FC<CanvasProps> = ({
             }}
             onDrop={e => {
               e.preventDefault(); e.stopPropagation(); setRootDrop(false);
+              setDragPreview(null);
               const ct = e.dataTransfer.getData("componentType");
               if (ct) onDropInto(ct, "root", "inside");
               else if (cdId) onMove(cdId, "root", "inside");
@@ -188,20 +207,13 @@ const Canvas: React.FC<CanvasProps> = ({
                 preview={preview} 
                 cdId={cdId} 
                 setCdId={setCdId} 
+                setDragPreview={setDragPreview}
+                dragPreview={dragPreview}
+                draggingType={draggingType}
               />
             ))}
             
-            {!preview && rootDrop && tree.children.length > 0 && (
-              <div 
-                style={{ 
-                  height: '2px', backgroundColor: '#7c5cfc', width: '100%', 
-                  position: 'relative', marginTop: '1px', zIndex: 9999,
-                  boxShadow: '0 0 0 2px rgba(124, 92, 252, 0.25)' 
-                }} 
-              />
-            )}
-
-            {tree.children.length === 0 && (
+             {tree.children.length === 0 && (
               <div className={styles.emptyCanvas} style={rootDrop ? { borderColor: '#7c5cfc', backgroundColor: 'rgba(124, 92, 252, 0.05)' } : {}}>
 
                 <div className={styles.emptyIcon}>◈</div>
@@ -209,62 +221,59 @@ const Canvas: React.FC<CanvasProps> = ({
                 <div className={styles.emptySub}>Drag from left panel · Esc to cancel</div>
               </div>
             )}
-
-            {!preview && getAllNodes(tree).map((n: AppNode) => {
-                const parentId = getParentId(tree, n.id);
-                const parentNode = parentId ? find(tree, parentId) : null;
-                const s = n.style || {};
-                const extractVal = (v: any) => parseFloat(String(v || 0)) || 0;
-                const m = {
-                  t: extractVal(s.marginTop),
-                  r: extractVal(s.marginRight),
-                  b: extractVal(s.marginBottom),
-                  l: extractVal(s.marginLeft)
-                };
-                const p = {
-                  t: extractVal(s.paddingTop),
-                  r: extractVal(s.paddingRight),
-                  b: extractVal(s.paddingBottom),
-                  l: extractVal(s.paddingLeft)
-                };
-                
-                return (
-                  <React.Fragment key={n.id}>
-                    {selIds.includes(n.id) && !preview && (
-                      <SelectionOverlay 
-                        selId={n.id}
-                        zoom={zoom}
-                        panX={panX}
-                        panY={panY}
-                        frameRef={canRef}
-                        onStyle={onStyle}
-                        setIsResizing={setIsResizing}
-                        parentType={parentNode?.type}
-                        padding={p}
-                        margin={m}
-                        snap={true}
-                      />
-                    )}
-
-                    {/* Logic Indicator */}
-                    {n.logic && Object.keys(n.logic).length > 0 && !preview && (
-                      <div 
-                        className={styles.logicBadge} 
-                        style={{ 
-                          position: "absolute",
-                          left: "4px",
-                          top: "4px",
-                          zIndex: 10
-                        }}
-                        title="Has Interactions"
-                      >
-                        ⚡
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
           </div>
+
+          {!preview && getAllNodes(tree).map((n: AppNode) => {
+              const s = n.style || {};
+              const extractVal = (v: any) => parseFloat(String(v || 0)) || 0;
+              const m = {
+                t: extractVal(s.marginTop),
+                r: extractVal(s.marginRight),
+                b: extractVal(s.marginBottom),
+                l: extractVal(s.marginLeft)
+              };
+              const p = {
+                t: extractVal(s.paddingTop),
+                r: extractVal(s.paddingRight),
+                b: extractVal(s.paddingBottom),
+                l: extractVal(s.paddingLeft)
+              };
+              
+              return (
+                <React.Fragment key={n.id}>
+                  {selIds.includes(n.id) && !preview && (
+                    <SelectionOverlay 
+                      selId={n.id}
+                      zoom={zoom}
+                      panX={panX}
+                      panY={panY}
+                      frameRef={frameRef}
+                      onStyle={onStyle}
+                      setIsResizing={setIsResizing}
+                      padding={p}
+                      margin={m}
+                      snap={true}
+                    />
+                  )}
+
+                  {/* Logic Indicator */}
+                  {n.logic && Object.keys(n.logic).length > 0 && !preview && (
+                    <div 
+                      className={styles.logicBadge} 
+                      style={{ 
+                        position: "absolute",
+                        left: "4px",
+                        top: "4px",
+                        zIndex: 10
+                      }}
+                      title="Has Interactions"
+                    >
+                      ⚡
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
         </div>
       </div>
 

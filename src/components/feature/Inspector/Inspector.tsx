@@ -14,6 +14,8 @@ import PropertyInput from "../../ui/PropertyInput/PropertyInput";
 import AdvancedPanel from "./AdvancedPanel";
 import LogicInspector from "./LogicInspector";
 
+import AlignmentGrid from "./components/AlignmentGrid";
+
 import { find } from "../../../utils/treeUtils";
 
 interface InspectorProps {
@@ -25,6 +27,72 @@ interface InspectorProps {
   onReset: (id: string) => void;
   onUpdateLogic: (id: string, eventType: string, logic: any) => void;
 }
+
+const ShadowEditor: React.FC<{ value: string, onChange: (v: string) => void }> = ({ value, onChange }) => {
+  const parts = (value || "0px 4px 12px 0px rgba(0,0,0,0.3)").split(/(?!\(.*)\s+(?![^(]*?\))/g);
+  const x = parts[0] || "0px";
+  const y = parts[1] || "4px";
+  const b = parts[2] || "12px";
+  const isExtended = parts.length >= 5;
+  const s = isExtended ? parts[3] : "0px";
+  const c = isExtended ? parts.slice(4).join(" ") : parts[3] || "rgba(0,0,0,0.3)";
+
+  const update = (nx: string, ny: string, nb: string, ns: string, nc: string) => {
+    onChange(`${nx || "0px"} ${ny || "0px"} ${nb || "0px"} ${ns || "0px"} ${nc || "rgba(0,0,0,0)"}`);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className={styles.grid2}>
+        <div className={styles.compactField}>
+          <span className={styles.fieldLabel}>X</span>
+          <PropertyInput value={x} onChange={(v) => update(v, y, b, s, c)} />
+        </div>
+        <div className={styles.compactField}>
+          <span className={styles.fieldLabel}>Y</span>
+          <PropertyInput value={y} onChange={(v) => update(x, v, b, s, c)} />
+        </div>
+        <div className={styles.compactField}>
+          <span className={styles.fieldLabel}>Blur</span>
+          <PropertyInput value={b} onChange={(v) => update(x, y, v, s, c)} />
+        </div>
+        <div className={styles.compactField}>
+          <span className={styles.fieldLabel}>Spread</span>
+          <PropertyInput value={s} onChange={(v) => update(x, y, b, v, c)} />
+        </div>
+      </div>
+      <div className={styles.colorSwatchRow}>
+        <div className={styles.swatchPreview} style={{ backgroundColor: c }} />
+        <ColorPicker value={c} onChange={(v) => update(x, y, b, s, v)} />
+      </div>
+    </div>
+  );
+};
+
+const BoxModel: React.FC<{ prefix: string, label: string, style: StyleProps, onChange: (s: StyleProps) => void }> = ({
+  prefix, label, style, onChange
+}) => {
+  const sides = [["T", "Top"], ["R", "Right"], ["B", "Bottom"], ["L", "Left"]];
+  return (
+    <div className={styles.compactField}>
+      <span className={styles.fieldLabel} style={{ marginBottom: "2px", opacity: 0.6 }}>{label}</span>
+      <div className={styles.spacingGrid}>
+        {sides.map(([l, full]) => {
+          const k = prefix === "border" ? `border${full}Width` : `${prefix}${full}`;
+          return (
+            <div key={k} className={styles.spacingItem}>
+              <span className={styles.sideLabel}>{l}</span>
+              <PropertyInput 
+                value={style[k] || "0"} 
+                onChange={(v) => onChange({ [k]: v })} 
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const Inspector: React.FC<InspectorProps> = ({ 
   selIds, tree, onStyle, onContent, onRename, onReset, onUpdateLogic 
@@ -39,7 +107,7 @@ const Inspector: React.FC<InspectorProps> = ({
   if (selIds.length === 0) {
     return (
       <div className={styles.empty}>
-        <div className={styles.emptyIcon}>◻</div>
+        <div className={styles.emptyIcon}>✦</div>
         <div className={styles.emptyText}>Select an element<br />to edit its properties</div>
       </div>
     );
@@ -88,17 +156,17 @@ const Inspector: React.FC<InspectorProps> = ({
             value={node.name}
             onChange={(e) => onRename(node.id, e.target.value)}
             className={styles.nameInput}
+            spellCheck={false}
           />
           <div className={styles.headerActions}>
-            <Button variant="tb" size="sm" onClick={handleExport} className={styles.zipBtn}>
-              ↓ ZIP
-            </Button>
-            <span className={styles.typeBadge}>{node.type}</span>
+            <button onClick={handleExport} className={styles.typeBadge} title="Export as ZIP">
+              Export
+            </button>
           </div>
         </div>
         
         <div className={styles.panelTabs}>
-          {[["design", "Design"], ["logic", "Logic ⚡"], ["adv", "Variables"]].map(([p, l]) => (
+          {[["design", "Design"], ["logic", "Logic"], ["adv", "Vars"]].map(([p, l]) => (
             <button
               key={p}
               onClick={() => setPanel(p as "design" | "adv" | "logic")}
@@ -119,15 +187,18 @@ const Inspector: React.FC<InspectorProps> = ({
                 <div className={styles.contentEditor}>
                   {node.type === "image" ? (
                     <div className={styles.imageUploadGrp}>
-                      <Field label="Image URL">
-                        <Input 
-                          value={node.content} 
-                          onChange={(e) => onContent(node.id, e.target.value)} 
-                          placeholder="https://example.com/image.png"
-                        />
-                      </Field>
+                      <div className={styles.propRow}>
+                        <span className={styles.propLabel}>URL</span>
+                        <div className={styles.propValue}>
+                          <Input 
+                            value={node.content} 
+                            onChange={(e) => onContent(node.id, e.target.value)} 
+                            placeholder="https://..."
+                            variant="ghost"
+                          />
+                        </div>
+                      </div>
                       <div className={styles.uploadRow}>
-                        <span>Or upload:</span>
                         <input 
                           type="file" accept="image/*" 
                           onChange={async (e) => {
@@ -143,15 +214,18 @@ const Inspector: React.FC<InspectorProps> = ({
                     </div>
                   ) : node.type === "icon" ? (
                     <div className={styles.imageUploadGrp}>
-                      <Field label="Icon Name">
-                        <Select 
-                          value={node.content || "user"} 
-                          options={["user", "home", "search", "settings", "bell"]} 
-                          onChange={(e) => onContent(node.id, e.target.value)} 
-                        />
-                      </Field>
+                      <div className={styles.propRow}>
+                        <span className={styles.propLabel}>Icon</span>
+                        <div className={styles.propValue}>
+                          <Select 
+                            value={node.content || "user"} 
+                            options={["user", "home", "search", "settings", "bell"]} 
+                            onChange={(e) => onContent(node.id, e.target.value)} 
+                            variant="ghost"
+                          />
+                        </div>
+                      </div>
                       <div className={styles.uploadRow}>
-                        <span>Or SVG:</span>
                         <input 
                           type="file" accept=".svg" 
                           onChange={async (e) => {
@@ -171,12 +245,8 @@ const Inspector: React.FC<InspectorProps> = ({
                       onChange={(e) => onContent(node.id, e.target.value)}
                       className={styles.contentTextArea}
                       placeholder="Type content..."
+                      spellCheck={false}
                     />
-                  )}
-                  {node.type !== "image" && node.type !== "icon" && (
-                    <div className={styles.contentFooter}>
-                      <span>{node.content?.length || 0} chars</span>
-                    </div>
                   )}
                 </div>
               </Section>
@@ -242,76 +312,68 @@ const Inspector: React.FC<InspectorProps> = ({
               </Section>
             )}
 
-            {/* Layout Section */}
             <Section label="Layout" open={open.layout} onToggle={() => toggle("layout")}>
-              <div className={styles.grid2}>
-                <Field label="Display">
+              <div className={styles.propRow}>
+                <span className={styles.propLabel}>Display</span>
+                <div className={styles.propValue}>
                   <Select 
                     value={s.display || "block"} 
-                    options={["block", "flex", "grid", "inline", "inline-flex", "none"]} 
+                    options={["block", "flex", "grid", "inline", "none"]} 
                     onChange={(e) => set("display", e.target.value)} 
+                    variant="ghost"
                   />
-                </Field>
-                <Field label="Position">
+                </div>
+              </div>
+              
+              <div className={styles.propRow}>
+                <span className={styles.propLabel}>Position</span>
+                <div className={styles.propValue}>
                   <Select 
                     value={s.position || "relative"} 
                     options={["relative", "absolute", "fixed", "sticky", "static"]} 
                     onChange={(e) => set("position", e.target.value)} 
+                    variant="ghost"
                   />
-                </Field>
+                </div>
               </div>
-              
+
               {(s.display === "flex" || s.display === "inline-flex") && (
-                <div className={styles.flexConfig}>
-                  <TogGrp 
-                    label="Direction" 
-                    val={(s.flexDirection as string) || "row"} 
-                    ch={(v) => set("flexDirection", v)} 
-                    opts={[["row", "→", "Row"], ["column", "↓", "Column"], ["row-reverse", "←", "Row Reverse"], ["column-reverse", "↑", "Column Reverse"]]} 
-                  />
-                  <div className={styles.flexConfig}>
-                    <TogGrp 
-                      label="Justify" 
-                      val={(s.justifyContent as string) || "flex-start"} 
-                      ch={(v) => set("justifyContent", v)} 
-                      opts={[
-                        ["flex-start", "◰", "Start"],
-                        ["center", "◩", "Center"],
-                        ["flex-end", "◱", "End"],
-                        ["space-between", "◫", "Between"],
-                        ["space-around", "⊞", "Around"]
-                      ]}
-                    />
-                    <TogGrp 
-                      label="Align" 
-                      val={(s.alignItems as string) || "stretch"} 
-                      ch={(v) => set("alignItems", v)} 
-                      opts={[
-                        ["flex-start", "⌅", "Start"],
-                        ["center", "⌯", "Center"],
-                        ["flex-end", "⌆", "End"],
-                        ["stretch", "〓", "Stretch"]
-                      ]}
-                    />
-                    <div className={styles.grid2}>
-                      <Field label="Gap">
-                        <PropertyInput 
-                          value={s.gap || "0px"} 
-                          onChange={(v) => set("gap", v)} 
-                          onClear={() => clr("gap")}
-                          showClear={!!s.gap}
-                        />
-                      </Field>
-                      <Field label="Wrap">
+                <div style={{ padding: "8px 0" }}>
+                  <div className={styles.propRow}>
+                    <span className={styles.propLabel}>Direction</span>
+                    <div className={styles.propValue}>
+                      <TogGrp 
+                        val={(s.flexDirection as string) || "row"} 
+                        ch={(v) => set("flexDirection", v)} 
+                        opts={[["row", "→", "Horizontal"], ["column", "↓", "Vertical"]]} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.propRow} style={{ alignItems: "flex-start", marginTop: "8px" }}>
+                    <span className={styles.propLabel}>Alignment</span>
+                    <div className={styles.propValue} style={{ justifyContent: "space-between", width: "100%" }}>
+                      <AlignmentGrid 
+                        justify={(s.justifyContent as string) || "flex-start"}
+                        align={(s.alignItems as string) || "stretch"}
+                        onChange={(j, a) => sm({ justifyContent: j, alignItems: a })}
+                      />
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                         <Field label="Gap">
+                          <PropertyInput 
+                            value={s.gap || "0"} 
+                            onChange={(v) => set("gap", v)} 
+                          />
+                        </Field>
                         <TogGrp 
                           val={(s.flexWrap as string) || "nowrap"} 
                           ch={(v) => set("flexWrap", v)} 
                           opts={[
                             ["nowrap", "→", "No Wrap"],
                             ["wrap", "↩", "Wrap"]
-                          ]}
+                          ]} 
                         />
-                      </Field>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -321,152 +383,95 @@ const Inspector: React.FC<InspectorProps> = ({
                 <div className={styles.gridConfig}>
                   <div className={styles.grid2}>
                     <Field label="Cols">
-                      <Input value={(s.gridTemplateColumns as string) || "1fr 1fr"} onChange={(e) => set("gridTemplateColumns", e.target.value)} />
-                    </Field>
-                    <Field label="Rows">
-                      <Input value={(s.gridTemplateRows as string) || ""} onChange={(e) => set("gridTemplateRows", e.target.value)} placeholder="auto" />
+                      <Input value={(s.gridTemplateColumns as string) || "1fr 1fr"} onChange={(e) => set("gridTemplateColumns", e.target.value)} variant="ghost" />
                     </Field>
                     <Field label="Gap">
-                      <PropertyInput 
-                        value={s.gap || "0px"} 
-                        onChange={(v) => set("gap", v)} 
-                        onClear={() => clr("gap")}
-                        showClear={!!s.gap}
-                      />
+                      <PropertyInput value={s.gap || "0px"} onChange={(v) => set("gap", v)} />
                     </Field>
                   </div>
                 </div>
               )}
-              
-              {(s.position === "absolute" || s.position === "fixed") && (
-                <div className={styles.grid4}>
-                  {[["T", "top"], ["R", "right"], ["B", "bottom"], ["L", "left"]].map(([l, k]) => (
-                    <Field key={k} label={l}>
-                      <PropertyInput 
-                        value={s[k] || "0px"} 
-                        onChange={(v) => set(k, v)} 
-                        onClear={() => clr(k)}
-                        showClear={s[k] !== undefined}
-                      />
-                    </Field>
-                  ))}
+            </Section>
+            <Section label="Frame" open={open.size} onToggle={() => toggle("size")}>
+              <div className={styles.grid2}>
+                <div className={styles.compactField}>
+                  <span className={styles.fieldLabel}>W</span>
+                  <PropertyInput value={s.width || "auto"} onChange={(v) => set("width", v)} />
+                </div>
+                <div className={styles.compactField}>
+                  <span className={styles.fieldLabel}>H</span>
+                  <PropertyInput value={s.height || "auto"} onChange={(v) => set("height", v)} />
+                </div>
+              </div>
+              {["absolute", "fixed"].includes(s.position as string) && (
+                <div className={styles.grid2}>
+                  <div className={styles.compactField}>
+                    <span className={styles.fieldLabel}>X (Left)</span>
+                    <PropertyInput value={s.left || "0"} onChange={(v) => set("left", v)} />
+                  </div>
+                  <div className={styles.compactField}>
+                    <span className={styles.fieldLabel}>Y (Top)</span>
+                    <PropertyInput value={s.top || "0"} onChange={(v) => set("top", v)} />
+                  </div>
                 </div>
               )}
+              <div className={styles.propRow}>
+                <span className={styles.propLabel}>Radius</span>
+                <div className={styles.propValue}>
+                  <PropertyInput value={s.borderRadius || "0"} onChange={(v) => set("borderRadius", v)} />
+                </div>
+              </div>
             </Section>
 
-            {/* Flex Child Section */}
+            {/* Flex Child Section - Only show if parent has flex/grid */}
             <Section label="Flex Item" open={true} onToggle={() => { }}>
               <div className={styles.grid2}>
-                <Field label="Flex">
+                <div className={styles.compactField}>
+                  <span className={styles.fieldLabel}>Flex</span>
                   <Input 
                     value={(s.flex as string) || ""} 
                     onChange={(e) => set("flex", e.target.value)} 
-                    placeholder="e.g. 1, none, initial"
+                    placeholder="e.g. 1"
+                    variant="ghost"
                   />
-                </Field>
-                <Field label="Align Self">
+                </div>
+                <div className={styles.compactField}>
+                  <span className={styles.fieldLabel}>Align</span>
                   <Select 
                     value={(s.alignSelf as string) || "auto"} 
-                    options={["auto", "flex-start", "center", "flex-end", "stretch", "baseline"]} 
+                    options={["auto", "flex-start", "center", "flex-end", "stretch"]} 
                     onChange={(e) => set("alignSelf", e.target.value)} 
+                    variant="ghost" 
                   />
-                </Field>
-              </div>
-              <div className={styles.grid2} style={{ marginTop: '8px' }}>
-                <Field label="Order">
-                  <Input 
-                    type="number"
-                    value={(s.order as string) || "0"} 
-                    onChange={(e) => set("order", e.target.value)} 
-                  />
-                </Field>
+                </div>
               </div>
             </Section>
 
-            {/* Size Section */}
-            <Section label="Size" open={open.size} onToggle={() => toggle("size")}>
-              <div className={styles.grid2}>
-                <Field label="Width">
-                  <PropertyInput 
-                    value={s.width || "auto"} 
-                    onChange={(v) => set("width", v)} 
-                    onClear={() => clr("width")}
-                    showClear={!!s.width}
-                  />
-                </Field>
-                <Field label="Height">
-                  <PropertyInput 
-                    value={s.height || "auto"} 
-                    onChange={(v) => set("height", v)} 
-                    onClear={() => clr("height")}
-                    showClear={!!s.height}
-                  />
-                </Field>
-                <Field label="Min W">
-                  <PropertyInput 
-                    value={s.minWidth || "—"} 
-                    onChange={(v) => set("minWidth", v)} 
-                    onClear={() => clr("minWidth")}
-                    showClear={!!s.minWidth}
-                  />
-                </Field>
-                <Field label="Min H">
-                  <PropertyInput 
-                    value={s.minHeight || "—"} 
-                    onChange={(v) => set("minHeight", v)} 
-                    onClear={() => clr("minHeight")}
-                    showClear={!!s.minHeight}
-                  />
-                </Field>
-              </div>
-              <div className={styles.grid2} style={{ marginTop: '8px' }}>
-                <Field label="Max W">
-                  <PropertyInput 
-                    value={s.maxWidth || "—"} 
-                    onChange={(v) => set("maxWidth", v)} 
-                    onClear={() => clr("maxWidth")}
-                    showClear={!!s.maxWidth}
-                  />
-                </Field>
-                <Field label="Max H">
-                  <PropertyInput 
-                    value={s.maxHeight || "—"} 
-                    onChange={(v) => set("maxHeight", v)} 
-                    onClear={() => clr("maxHeight")}
-                    showClear={!!s.maxHeight}
-                  />
-                </Field>
-              </div>
-            </Section>
-
-            {/* Spacing Section */}
             <Section label="Spacing" open={open.spacing} onToggle={() => toggle("spacing")}>
-              <BoxModel prefix="padding" label="Padding" style={s} onChange={sm} onClear={clr} />
-              <div style={{ marginTop: '16px' }}>
-                <BoxModel prefix="margin" label="Margin" style={s} onChange={sm} onClear={clr} />
+              <BoxModel prefix="padding" label="Padding" style={s} onChange={sm} />
+              <div style={{ marginTop: "12px" }}>
+                <BoxModel prefix="margin" label="Margin" style={s} onChange={sm} />
               </div>
             </Section>
 
-            {/* Fill Section */}
             <Section label="Fill" open={open.fill} onToggle={() => toggle("fill")}>
-              <Field label="BG">
-                <ColorPicker 
-                  value={(s.backgroundColor as string) || ""} 
-                  onChange={(v) => set("backgroundColor", v)} 
-                  showNone 
-                />
-              </Field>
-              <div className={styles.grid2}>
-                <Field label="Radius">
-                  <PropertyInput 
-                    value={s.borderRadius || "0px"} 
-                    onChange={(v) => set("borderRadius", v)} 
-                    onClear={() => clr("borderRadius")}
-                    showClear={s.borderRadius !== undefined}
-                  />
-                </Field>
-                <Field label="Opacity">
-                   <div className={styles.rangeContainer}>
+              <div className={styles.propRow}>
+                <span className={styles.propLabel}>Background</span>
+                <div className={styles.propValue}>
+                   <div className={styles.colorSwatchRow}>
+                    <div className={styles.swatchPreview} style={{ backgroundColor: (s.backgroundColor as string) || "transparent" }} />
+                    <ColorPicker 
+                      value={(s.backgroundColor as string) || ""} 
+                      onChange={(v) => set("backgroundColor", v)} 
+                      showNone 
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.propRow}>
+                <span className={styles.propLabel}>Opacity</span>
+                <div className={styles.propValue}>
+                  <div className={styles.rangeContainer}>
                     <input 
                       type="range" min={0} max={1} step={0.01}
                       value={parseFloat((s.opacity as string) ?? "1")}
@@ -475,192 +480,97 @@ const Inspector: React.FC<InspectorProps> = ({
                     />
                     <span className={styles.rangeVal}>{Math.round(parseFloat((s.opacity as string) ?? "1") * 100)}%</span>
                   </div>
-                </Field>
+                </div>
               </div>
             </Section>
 
-            {/* Stroke Section */}
             <Section label="Stroke" open={open.stroke} onToggle={() => toggle("stroke")}>
-              <div className={styles.grid2}>
-                <Field label="Width">
-                  <PropertyInput 
-                    value={s.borderWidth || s.borderBottomWidth || s.borderTopWidth || s.borderLeftWidth || s.borderRightWidth || "0px"} 
-                    onChange={(v) => {
-                      const side = (s as any)._borderSide || "all";
-                      sm({
-                        borderWidth: side === "all" ? v : "0px",
-                        borderTopWidth: side === "top" ? v : undefined,
-                        borderBottomWidth: side === "bottom" ? v : undefined,
-                        borderLeftWidth: side === "left" ? v : undefined,
-                        borderRightWidth: side === "right" ? v : undefined,
-                      });
-                    }} 
-                    onClear={() => sm({ borderWidth: undefined, borderTopWidth: undefined, borderBottomWidth: undefined, borderLeftWidth: undefined, borderRightWidth: undefined })}
-                    showClear={!!(s.borderWidth || s.borderBottomWidth || s.borderTopWidth || s.borderLeftWidth || s.borderRightWidth)}
-                  />
-                </Field>
-                <Field label="Side">
-                  <Select 
-                    value={(s as any)._borderSide || "all"} 
-                    options={["all", "top", "bottom", "left", "right"]} 
-                    onChange={(e) => {
-                      const side = e.target.value;
-                      const w = s.borderWidth && s.borderWidth !== "0px" ? s.borderWidth : (s.borderBottomWidth || s.borderTopWidth || s.borderLeftWidth || s.borderRightWidth || "1px");
-                      sm({
-                        _borderSide: side,
-                        borderWidth: side === "all" ? w : "0px",
-                        borderTopWidth: side === "top" ? w : undefined,
-                        borderBottomWidth: side === "bottom" ? w : undefined,
-                        borderLeftWidth: side === "left" ? w : undefined,
-                        borderRightWidth: side === "right" ? w : undefined,
-                      });
-                    }} 
-                  />
-                </Field>
+              <div className={styles.propRow}>
+                <span className={styles.propLabel}>Color</span>
+                <div className={styles.propValue}>
+                  <div className={styles.colorSwatchRow}>
+                    <div className={styles.swatchPreview} style={{ backgroundColor: (s.borderColor as string) || "transparent" }} />
+                    <ColorPicker value={(s.borderColor as string) || ""} onChange={(v) => set("borderColor", v)} />
+                  </div>
+                </div>
               </div>
-              <div className={styles.grid2} style={{ marginTop: '16px' }}>
-                <Field label="Style">
+              <div className={styles.grid2}>
+                <div className={styles.compactField}>
+                  <span className={styles.fieldLabel}>Width</span>
+                  <PropertyInput 
+                    value={s.borderWidth || "0"} 
+                    onChange={(v) => set("borderWidth", v)} 
+                  />
+                </div>
+                <div className={styles.compactField}>
+                  <span className={styles.fieldLabel}>Style</span>
                   <Select 
                     value={(s.borderStyle as string) || "none"} 
-                    options={["none", "solid", "dashed", "dotted", "double"]} 
+                    options={["none", "solid", "dashed", "dotted"]} 
                     onChange={(e) => set("borderStyle", e.target.value)} 
+                    variant="ghost"
                   />
-                </Field>
-                <Field label="Color">
-                  <ColorPicker value={(s.borderColor as string) || ""} onChange={(v) => set("borderColor", v)} />
-                </Field>
-              </div>
-              
-              <div className={styles.grid2} style={{ marginTop: '12px' }}>
-                <Field label="Color Opacity">
-                   <div className={styles.rangeContainer}>
-                    <input 
-                      type="range" min={0} max={1} step={0.01}
-                      value={(() => {
-                        const bc = (s.borderColor as string) || "";
-                        if (bc.startsWith("rgba")) {
-                          const m = bc.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([0-9.]+)\)/);
-                          if (m) return parseFloat(m[1]);
-                        }
-                        return 1;
-                      })()}
-                      onChange={(e) => {
-                        const alpha = e.target.value;
-                        let hex = (s.borderColor as string) || "#000000";
-                        if (hex.startsWith("rgba")) {
-                          set("borderColor", hex.replace(/([0-9.]+)(?=\))/, alpha));
-                        } else {
-                          hex = hex.replace("#", "");
-                          if (hex.length === 3) hex = hex.split("").map(c => c+c).join("");
-                          const r = parseInt(hex.substring(0, 2), 16) || 0;
-                          const g = parseInt(hex.substring(2, 4), 16) || 0;
-                          const b = parseInt(hex.substring(4, 6), 16) || 0;
-                          set("borderColor", `rgba(${r}, ${g}, ${b}, ${alpha})`);
-                        }
-                      }}
-                      className={styles.range}
-                    />
-                  </div>
-                </Field>
-              </div>
-              <div style={{ marginTop: '12px' }}>
-                <Field label="Shadow">
-                  <ShadowEditor value={(s.boxShadow as string) || ""} onChange={(v) => set("boxShadow", v)} />
-                </Field>
+                </div>
               </div>
             </Section>
 
-            {/* Typography Section */}
-            {["text", "heading", "button", "input"].includes(node.type) && (
-              <Section label="Typography" open={open.typo} onToggle={() => toggle("typo")}>
-              <div className={styles.grid2}>
-                <Field label="Size">
-                  <PropertyInput 
-                    value={s.fontSize || "auto"} 
-                    onChange={(v) => set("fontSize", v)} 
-                    onClear={() => clr("fontSize")}
-                    showClear={!!s.fontSize}
-                  />
-                </Field>
-                <Field label="Weight">
-                  <Select 
-                    value={(s.fontWeight as string) || "400"} 
-                    options={["100", "200", "300", "400", "500", "600", "700", "800", "900"]} 
-                    onChange={(e) => set("fontWeight", e.target.value)} 
-                  />
-                </Field>
-                <Field label="Line H">
-                  <PropertyInput 
-                    value={s.lineHeight || "normal"} 
-                    units={["", "px", "%", "em", "rem"]}
-                    onChange={(v) => set("lineHeight", v)} 
-                    onClear={() => clr("lineHeight")}
-                    showClear={!!s.lineHeight}
-                  />
-                </Field>
-                <Field label="Letter Spc">
-                  <PropertyInput 
-                    value={s.letterSpacing || "normal"} 
-                    units={["px", "em", "rem", ""]}
-                    onChange={(v) => set("letterSpacing", v)} 
-                    onClear={() => clr("letterSpacing")}
-                    showClear={!!s.letterSpacing}
-                  />
-                </Field>
+            <Section label="Effects" open={open.effects} onToggle={() => toggle("effects")}>
+              <div className={styles.propRow} style={{ alignItems: "flex-start", paddingTop: "8px" }}>
+                <span className={styles.propLabel}>Shadow</span>
+                <div className={styles.propValue}>
+                  <ShadowEditor value={(s.boxShadow as string) || ""} onChange={(v) => set("boxShadow", v)} />
+                </div>
               </div>
-              <Field label="Align">
-                <TogGrp 
-                  val={(s.textAlign as string) || "left"} 
-                  ch={(v) => set("textAlign", v)} 
-                  opts={[
-                    ["left", "≡", "Left"],
-                    ["center", "≣", "Center"],
-                    ["right", "≡", "Right"],
-                    ["justify", "≋", "Justify"]
-                  ]}
-                />
-              </Field>
-              <Field label="Color">
-                <ColorPicker 
-                  value={(s.color as string) || "#000000"} 
-                  onChange={(v) => set("color", v)} 
-                />
-              </Field>
-              <Field label="Font">
-                <Select 
-                  value={(s.fontFamily as string) || "inherit"} 
-                  options={["inherit", "Outfit", "Inter", "Montserrat", "Playfair Display", "system-ui"]} 
-                  onChange={(e) => set("fontFamily", e.target.value)} 
-                />
-              </Field>
-              <div className={styles.grid2}>
-                <Field label="Style">
-                  <Select 
-                    value={(s.fontStyle as string) || "normal"} 
-                    options={["normal", "italic", "oblique"]} 
-                    onChange={(e) => set("fontStyle", e.target.value)} 
-                  />
-                </Field>
-                <Field label="Transform">
-                  <Select 
-                    value={(s.textTransform as string) || "none"} 
-                    options={["none", "uppercase", "lowercase", "capitalize", "titlecase"]} 
-                    onChange={(e) => set("textTransform", e.target.value)} 
-                  />
-                </Field>
-              </div>
-              <Field label="Decoration">
-                  <TogGrp 
-                    val={(s.textDecoration as string) || "none"} 
-                    ch={(v) => set("textDecoration", v)} 
-                    opts={[
-                      ["none", "✕", "None"],
-                      ["underline", "U̲", "Underline"],
-                      ["line-through", "S̶", "Strikethrough"]
-                    ]}
-                  />
-              </Field>
             </Section>
+
+            {["text", "heading", "button", "input"].includes(node.type) && (
+              <Section label="Type" open={open.typo} onToggle={() => toggle("typo")}>
+                <div className={styles.propRow}>
+                  <span className={styles.propLabel}>Font</span>
+                  <div className={styles.propValue}>
+                    <Select 
+                      value={(s.fontFamily as string) || "inherit"} 
+                      options={["Inter", "Outfit", "system-ui", "monospace"]} 
+                      onChange={(e) => set("fontFamily", e.target.value)} 
+                      variant="ghost"
+                    />
+                  </div>
+                </div>
+                <div className={styles.grid2}>
+                   <div className={styles.compactField}>
+                    <span className={styles.fieldLabel}>Weight</span>
+                    <Select 
+                      value={(s.fontWeight as string) || "400"} 
+                      options={["100", "200", "300", "400", "500", "600", "700", "800", "900"]} 
+                      onChange={(e) => set("fontWeight", e.target.value)} 
+                      variant="ghost"
+                    />
+                  </div>
+                  <div className={styles.compactField}>
+                    <span className={styles.fieldLabel}>Size</span>
+                    <PropertyInput value={s.fontSize || "14px"} onChange={(v) => set("fontSize", v)} />
+                  </div>
+                </div>
+                <div className={styles.propRow}>
+                  <span className={styles.propLabel}>Align</span>
+                  <div className={styles.propValue}>
+                    <TogGrp 
+                      val={(s.textAlign as string) || "left"} 
+                      ch={(v) => set("textAlign", v)} 
+                      opts={[["left", "≡"], ["center", "≣"], ["right", "≡"], ["justify", "≋"]]} 
+                    />
+                  </div>
+                </div>
+                <div className={styles.propRow}>
+                  <span className={styles.propLabel}>Color</span>
+                  <div className={styles.propValue}>
+                    <div className={styles.colorSwatchRow}>
+                      <div className={styles.swatchPreview} style={{ backgroundColor: (s.color as string) || "#fff" }} />
+                      <ColorPicker value={(s.color as string) || "#fff"} onChange={(v) => set("color", v)} />
+                    </div>
+                  </div>
+                </div>
+              </Section>
             )}
 
             {/* Reset Button */}
@@ -683,70 +593,5 @@ const Inspector: React.FC<InspectorProps> = ({
   );
 };
 
-const ShadowEditor: React.FC<{ value: string, onChange: (v: string) => void }> = ({ value, onChange }) => {
-  const parts = (value || "0px 4px 12px 0px rgba(0,0,0,0.3)").split(/(?!\(.*)\s+(?![^(]*?\))/g);
-  const x = parts[0] || "0px";
-  const y = parts[1] || "4px";
-  const b = parts[2] || "12px";
-  const isExtended = parts.length >= 5;
-  const s = isExtended ? parts[3] : "0px";
-  const c = isExtended ? parts.slice(4).join(" ") : parts[3] || "rgba(0,0,0,0.3)";
-
-  const update = (nx: string, ny: string, nb: string, ns: string, nc: string) => {
-    onChange(`${nx || "0px"} ${ny || "0px"} ${nb || "0px"} ${ns || "0px"} ${nc || "rgba(0,0,0,0)"}`);
-  };
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <div className={styles.grid4}>
-        <div>
-          <div className={styles.sideLabel}>X</div>
-          <PropertyInput value={x} onChange={(v) => update(v, y, b, s, c)} />
-        </div>
-        <div>
-          <div className={styles.sideLabel}>Y</div>
-          <PropertyInput value={y} onChange={(v) => update(x, v, b, s, c)} />
-        </div>
-        <div>
-          <div className={styles.sideLabel}>Blur</div>
-          <PropertyInput value={b} onChange={(v) => update(x, y, v, s, c)} />
-        </div>
-        <div>
-          <div className={styles.sideLabel}>Spread</div>
-          <PropertyInput value={s} onChange={(v) => update(x, y, b, v, c)} />
-        </div>
-      </div>
-      <ColorPicker value={c} onChange={(v) => update(x, y, b, s, v)} />
-    </div>
-  );
-};
-
-// Internal sub-component for Box Model
-const BoxModel: React.FC<{ prefix: string, label: string, style: StyleProps, onChange: (s: StyleProps) => void, onClear: (k: string) => void }> = ({
-  prefix, label, style, onChange, onClear
-}) => {
-  const sides = [["T", "Top"], ["R", "Right"], ["B", "Bottom"], ["L", "Left"]];
-  return (
-    <div className={styles.boxModel}>
-      <div className={styles.boxLabel}>{label}</div>
-      <div className={styles.grid4}>
-        {sides.map(([l, full]) => {
-          const k = prefix === "border" ? `border${full}Width` : `${prefix}${full}`;
-          return (
-            <div key={k}>
-              <div className={styles.sideLabel}>{l}</div>
-              <PropertyInput 
-                value={style[k] || "0"} 
-                onChange={(v) => onChange({ [k]: v })} 
-                onClear={() => onClear(k)}
-                showClear={style[k] !== undefined && style[k] !== "0"}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 export default Inspector;

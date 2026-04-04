@@ -6,9 +6,10 @@ interface SelectProps {
   value?: string | number;
   onChange?: (e: any) => void;
   className?: string;
+  variant?: "default" | "ghost";
 }
 
-const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "" }) => {
+const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "", variant = "default" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,7 +58,7 @@ const Select: React.FC<SelectProps> = ({ options, value, onChange, className = "
   return (
     <div className={`${styles.dropdown} ${className}`} ref={containerRef}>
       <button 
-        className={`${styles.trigger} ${isOpen ? styles.triggerActive : ""}`}
+        className={`${styles.trigger} ${styles[variant]} ${isOpen ? styles.triggerActive : ""}`}
         onClick={toggle}
         type="button"
       >

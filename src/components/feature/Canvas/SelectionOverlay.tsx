@@ -9,14 +9,13 @@ interface SelectionOverlayProps {
   frameRef: React.RefObject<HTMLDivElement | null>;
   onStyle: (id: string, style: any) => void;
   setIsResizing: (val: boolean) => void;
-  parentType?: string;
   padding?: { t: number, r: number, b: number, l: number };
   margin?: { t: number, r: number, b: number, l: number };
   snap?: boolean;
 }
 
 const SelectionOverlay: React.FC<SelectionOverlayProps> = ({ 
-  selId, zoom, panX, panY, frameRef, onStyle, setIsResizing, parentType, padding, margin, snap
+  selId, zoom, panX, panY, frameRef, onStyle, setIsResizing, padding, margin, snap
 }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,18 +28,24 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       return;
     }
 
+    let raf: number;
     const updateRect = () => {
       const el = document.querySelector(`[data-node-id="${selId}"]`);
       if (el) {
-        setRect(el.getBoundingClientRect());
+        const newRect = el.getBoundingClientRect();
+        setRect(prev => {
+          if (prev && prev.top === newRect.top && prev.left === newRect.left && 
+              prev.width === newRect.width && prev.height === newRect.height) return prev;
+          return newRect;
+        });
       } else {
         setRect(null);
       }
+      raf = requestAnimationFrame(updateRect);
     };
 
-    updateRect();
-    const interval = setInterval(updateRect, 30);
-    return () => clearInterval(interval);
+    raf = requestAnimationFrame(updateRect);
+    return () => cancelAnimationFrame(raf);
   }, [selId, zoom, panX, panY]);
 
   // Handle Resizing
@@ -81,7 +86,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [resizing, selId, zoom, onStyle, setIsResizing]);
+  }, [resizing, selId, zoom, onStyle, setIsResizing, rect, snap]);
 
   const handleResizeStart = (e: React.MouseEvent, handle: string) => {
     e.preventDefault();
@@ -109,6 +114,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     top: (rect.top - frameRect.top) / zoom,
     width: rect.width / zoom,
     height: rect.height / zoom,
+    willChange: 'left, top, width, height'
   };
 
   const handles = [
@@ -148,11 +154,6 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
         />
       ))}
 
-      {parentType && (
-        <div className={styles.parentBadge}>
-          in {parentType}
-        </div>
-      )}
 
       <div className={styles.infoBadge}>
         {Math.round(rect.width / zoom)} x {Math.round(rect.height / zoom)}

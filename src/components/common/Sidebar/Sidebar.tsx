@@ -40,13 +40,14 @@ interface SidebarProps {
   onUseComponent: (masterId: string, parentId: string) => void;
   onRename: (id: string, name: string) => void;
   onGroup: () => void;
+  setDragPreview: (preview: { type: string; targetId: string; position: 'before' | 'inside' | 'after' } | null) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   leftTab, setLeftTab, libExpanded, setLibExpanded, tree, selIds, hovId, 
   setHovId, onSelect, collapsed, setCollapsed, onDeleteNode, onDuplicateNode, 
   onToggleHide, onToggleLock, cdId, setCdId, setTree, setGhostType, setDragging, setGhostPos,
-  onCreateComponent, onUseComponent, onRename, onGroup
+  onCreateComponent, onUseComponent, onRename, onGroup, setDragPreview
 }) => {
   return (
     <div className={styles.sidebar}>
@@ -92,6 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     setGhostType(null);
                     setGhostPos(null);
                     setDragging(false);
+                    setDragPreview(null);
                   }}
                   className={styles.componentItem}
                 >
@@ -113,11 +115,24 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div 
                   key={id} 
                   className={styles.componentItem}
+                  draggable
+                  onDragStart={e => {
+                    e.dataTransfer.setData("masterId", id);
+                    if (master.type) setGhostType(master.type);
+                    setDragging(true);
+                    setGhostPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onDragEnd={() => {
+                    setGhostType(null);
+                    setGhostPos(null);
+                    setDragging(false);
+                    setDragPreview(null);
+                  }}
                   onClick={() => onUseComponent(id, selIds[0] || "root")}
                 >
                   <span className={styles.componentIcon} style={{ color: "#7c5cfc" }}>◈</span>
-                  <span className={styles.componentLabel}>{master.name.replace("Master: ", "")}</span>
-                  <button className={styles.addBtn}>+</button>
+                  <span className={styles.componentLabel}>{master.name?.replace("Master: ", "") || "Component"}</span>
+                  <button className={styles.addBtn} onClick={(e) => { e.stopPropagation(); onUseComponent(id, selIds[0] || "root"); }}>+</button>
                 </div>
               ))
             )}

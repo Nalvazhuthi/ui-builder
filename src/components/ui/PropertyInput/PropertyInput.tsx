@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import styles from "./PropertyInput.module.scss";
-import Dropdown from "../Dropdown/Dropdown";
 
 interface PropertyInputProps {
   value: string | number;
@@ -147,12 +146,15 @@ const PropertyInput: React.FC<PropertyInputProps> = ({
       </div>
       
       {activeUnits.length > 0 && (
-        <Dropdown 
-          className={styles.unitDropdown}
-          options={activeUnits}
+        <select 
+          className={styles.unitSelect}
           value={currentUnit}
-          onChange={handleUnitChange}
-        />
+          onChange={(e) => handleUnitChange(e.target.value)}
+        >
+          {activeUnits.filter(Boolean).map(u => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+        </select>
       )}
     </div>
   );

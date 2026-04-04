@@ -11,6 +11,7 @@ export interface AppNode {
   locked: boolean;
   hidden: boolean;
   children: AppNode[];
+  isPreview?: boolean;
   _vars?: string;
   isMaster?: boolean;
   masterId?: string;
@@ -78,4 +79,4 @@ export interface ThreeDComponent {
   desc: string;
 }
 
-export type Breakpoint = "mobile" | "tablet" | "desktop" | "tv";
+export type Breakpoint = "default" | "mobile" | "tablet" | "desktop" | "tv";

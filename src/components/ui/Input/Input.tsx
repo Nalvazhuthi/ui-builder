@@ -4,11 +4,12 @@ import styles from "./Input.module.scss";
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onClear?: () => void;
   showClear?: boolean;
+  variant?: "default" | "ghost";
 }
 
-const Input: React.FC<InputProps> = ({ onClear, showClear, className = "", ...props }) => {
+const Input: React.FC<InputProps> = ({ onClear, showClear, className = "", variant = "default", ...props }) => {
   return (
-    <div className={`${styles.container} ${className}`}>
+    <div className={`${styles.container} ${styles[variant]} ${className}`}>
       <input className={styles.input} {...props} />
       {showClear && (
         <span 

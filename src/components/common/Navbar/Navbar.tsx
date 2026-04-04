@@ -9,6 +9,7 @@ interface NavbarProps {
   breakpoint: Breakpoint;
   setBreakpoint: (bp: Breakpoint) => void;
   zoom: number;
+  centerView: () => void;
   preview: boolean;
   setPreview: (p: boolean) => void;
   grid: boolean;
@@ -23,7 +24,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({
-  tab, setTab, breakpoint, setBreakpoint, zoom, preview, setPreview,
+  tab, setTab, breakpoint, setBreakpoint, zoom, centerView, preview, setPreview,
   grid, setGrid,
   undo, redo, canUndo, canRedo, onSave, onClear, onExport
 }) => {
@@ -57,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <>
             <div className={styles.group}>
               <div className={styles.breakpointGroup}>
-                {[["mobile", "📱"], ["tablet", "▣"], ["desktop", "⊞"], ["tv", "⬛"]].map(([b, ic]) => (
+                {[["default", "◈"], ["mobile", "📱"], ["tablet", "▣"], ["desktop", "⊞"], ["tv", "⬛"]].map(([b, ic]) => (
                   <button
                     key={b}
                     onClick={() => setBreakpoint(b as Breakpoint)}
@@ -83,6 +84,13 @@ const Navbar: React.FC<NavbarProps> = ({
             <div className={styles.divider} />
 
             <div className={styles.group}>
+              <button 
+                className={styles.zoomButton} 
+                onClick={centerView}
+                title="Fit to Center"
+              >
+                ⛶
+              </button>
               <span className={styles.zoomText}>{Math.round(zoom * 100)}%</span>
               <button
                 onClick={() => setPreview(!preview)}
